@@ -26,6 +26,49 @@ class EaClubsApi
         return (string) App::env('EA_PLATFORM', 'common-gen5');
     }
 
+    public function importSyncedData(array $resources, int $matchLimit = 3): array
+    {
+        $stored = [];
+
+        if (isset($resources['members']) && is_array($resources['members'])) {
+            $this->writeCache(
+                'members_stats_' . $this->clubId() . '_' . $this->platform(),
+                $resources['members']
+            );
+            $stored[] = 'members';
+        }
+
+        if (isset($resources['clubInfo']) && is_array($resources['clubInfo'])) {
+            $this->writeCache(
+                'club_info_' . $this->clubId() . '_' . $this->platform(),
+                $resources['clubInfo']
+            );
+            $stored[] = 'clubInfo';
+        }
+
+        $matchLimit = max(1, min($matchLimit, 20));
+        $allowedTypes = ['leagueMatch', 'playoffMatch', 'friendlyMatch'];
+        foreach (($resources['matches'] ?? []) as $type => $matches) {
+            if (!in_array($type, $allowedTypes, true) || !is_array($matches)) {
+                continue;
+            }
+
+            $this->writeCache(
+                sprintf(
+                    'matches_%s_%s_%s_%d',
+                    $this->clubId(),
+                    $this->platform(),
+                    $type,
+                    $matchLimit
+                ),
+                $matches
+            );
+            $stored[] = 'matches.' . $type;
+        }
+
+        return $stored;
+    }
+
     /** Stats de miembros (plantilla) */
     public function memberStats(bool $forceRefresh = false): array
     {
@@ -37,6 +80,10 @@ class EaClubsApi
             if ($cached !== null) {
                 return ['ok' => true, 'cached' => true, 'data' => $cached];
             }
+        }
+
+        if (!$this->remoteFetchEnabled()) {
+            return $this->staleCacheOrError($cacheKey);
         }
 
         $url = $this->baseUrl . 'members/stats?' . http_build_query([
@@ -68,6 +115,10 @@ class EaClubsApi
             if ($cached !== null) {
                 return ['ok' => true, 'cached' => true, 'data' => $cached];
             }
+        }
+
+        if (!$this->remoteFetchEnabled()) {
+            return $this->staleCacheOrError($cacheKey);
         }
 
         $url = $this->baseUrl . 'clubs/info?' . http_build_query([
@@ -116,6 +167,10 @@ class EaClubsApi
             }
         }
 
+        if (!$this->remoteFetchEnabled()) {
+            return $this->staleCacheOrError($cacheKey);
+        }
+
         $url = $this->baseUrl . 'clubs/matches?' . http_build_query([
             'platform' => $this->platform(),
             'clubIds' => $this->clubId(),
@@ -140,6 +195,25 @@ class EaClubsApi
 
         $this->writeCache($cacheKey, $result['data']);
         return ['ok' => true, 'cached' => false, 'data' => $result['data']];
+    }
+
+    private function remoteFetchEnabled(): bool
+    {
+        return (bool) App::env('EA_REMOTE_FETCH_ENABLED', true);
+    }
+
+    private function staleCacheOrError(string $cacheKey): array
+    {
+        $stale = $this->readCache($cacheKey, PHP_INT_MAX);
+        if ($stale !== null) {
+            return ['ok' => true, 'cached' => true, 'stale' => true, 'data' => $stale];
+        }
+
+        return [
+            'ok' => false,
+            'error' => 'Todavía no hay datos sincronizados de EA Clubs',
+            'status' => 503,
+        ];
     }
 
     private function get(string $url): array

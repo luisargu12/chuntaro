@@ -8,6 +8,7 @@ use App\Core\Auth;
 use App\Controllers\AuthController;
 use App\Controllers\PlantillaController;
 use App\Controllers\PartidosController;
+use App\Controllers\EaSyncController;
 
 App::load();
 
@@ -28,6 +29,7 @@ $router->view('home', 'public/home.php', protegida: false);
 $router->get('plantilla', [PlantillaController::class, 'index']);
 $router->get('api/ea/members', [PlantillaController::class, 'membersApi']);
 $router->get('api/ea/matches', [PartidosController::class, 'latest']);
+$router->post('api/sync/ea', [EaSyncController::class, 'store']);
 
 $router->get('admin/logout', function () {
     Auth::logout();
