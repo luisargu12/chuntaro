@@ -21,18 +21,15 @@ require __DIR__ . '/../layouts/public_header.php';
 </section>
 
 <main class="container py-5">
-    <div id="plantillaStatus" class="alert alert-secondary">Cargando jugadores desde EA Clubs…</div>
+    <div id="plantillaStatus" class="alert alert-secondary">Cargando jugadores…</div>
     <div id="positionCounts" class="row g-3 mb-4 d-none"></div>
     <div id="playersGrid" class="row g-4"></div>
 </main>
 
 <script>
 (function () {
-  const CLUB_ID = <?= json_encode($clubId) ?>;
-  const PLATFORM = <?= json_encode($platform) ?>;
-  const BASE = <?= json_encode(App::basePath()) ?>;
-  const EA_URL = `https://proclubs.ea.com/api/fc/members/stats?platform=${encodeURIComponent(PLATFORM)}&clubId=${encodeURIComponent(CLUB_ID)}`;
-  const PROXY_URL = `${BASE}/api/ea/members`;
+  // Solo same-origin: evita CORS. El servidor PHP consulta EA.
+  const PROXY_URL = <?= json_encode(App::url('/api/ea/members')) ?>;
 
   const statusEl = document.getElementById('plantillaStatus');
   const gridEl = document.getElementById('playersGrid');
@@ -49,6 +46,13 @@ require __DIR__ . '/../layouts/public_header.php';
     const key = String(pos || '').toLowerCase();
     return map[key] || pos || '—';
   };
+
+  const escapeHtml = (str) => String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 
   const setStatus = (type, html) => {
     statusEl.className = `alert alert-${type}`;
@@ -100,21 +104,21 @@ require __DIR__ . '/../layouts/public_header.php';
             <div class="card-body p-4">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                  <h5 class="fw-bold mb-1">${escapeHtml(String(nombre))}</h5>
+                  <h5 class="fw-bold mb-1">${escapeHtml(nombre)}</h5>
                   <span class="badge rounded-pill" style="background: var(--color-primary);">${escapeHtml(posLabel(pos))}</span>
                 </div>
                 <div class="text-end">
-                  <div class="fs-3 fw-bold text-accent lh-1">${escapeHtml(String(rating))}</div>
+                  <div class="fs-3 fw-bold text-accent lh-1">${escapeHtml(rating)}</div>
                   <small class="text-muted">Rating</small>
                 </div>
               </div>
               <div class="row text-center g-2">
-                <div class="col-3"><div class="fw-bold">${escapeHtml(String(pj))}</div><small class="text-muted">PJ</small></div>
-                <div class="col-3"><div class="fw-bold">${escapeHtml(String(goles))}</div><small class="text-muted">Goles</small></div>
-                <div class="col-3"><div class="fw-bold">${escapeHtml(String(asist))}</div><small class="text-muted">Asist.</small></div>
-                <div class="col-3"><div class="fw-bold">${escapeHtml(String(mom))}</div><small class="text-muted">MOTM</small></div>
+                <div class="col-3"><div class="fw-bold">${escapeHtml(pj)}</div><small class="text-muted">PJ</small></div>
+                <div class="col-3"><div class="fw-bold">${escapeHtml(goles)}</div><small class="text-muted">Goles</small></div>
+                <div class="col-3"><div class="fw-bold">${escapeHtml(asist)}</div><small class="text-muted">Asist.</small></div>
+                <div class="col-3"><div class="fw-bold">${escapeHtml(mom)}</div><small class="text-muted">MOTM</small></div>
               </div>
-              ${winRate != null && winRate !== '' ? `<div class="mt-3 small text-muted">Win rate: ${escapeHtml(String(winRate))}%</div>` : ''}
+              ${winRate != null && winRate !== '' ? `<div class="mt-3 small text-muted">Win rate: ${escapeHtml(winRate)}%</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -126,60 +130,39 @@ require __DIR__ . '/../layouts/public_header.php';
     }
 
     let note = `Se cargaron <strong>${members.length}</strong> jugadores.`;
-    if (meta.source === 'ea') note += ' Fuente: EA (navegador).';
-    if (meta.source === 'proxy') note += ' Fuente: proxy PHP.';
-    if (meta.cached) note += ' (caché)';
+    if (meta.cached) note += ' (caché servidor)';
     setStatus('success', note);
   };
 
-  const escapeHtml = (str) => str
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-
-  async function fetchEaDirect() {
-    const res = await fetch(EA_URL, {
-      method: 'GET',
-      mode: 'cors',
-      credentials: 'omit',
-      headers: { 'Accept': 'application/json' },
-    });
-    if (!res.ok) throw new Error(`EA HTTP ${res.status}`);
-    return res.json();
-  }
-
-  async function fetchProxy() {
-    const res = await fetch(PROXY_URL, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-    });
-    const json = await res.json();
-    if (!json.exito) throw new Error(json.mensaje || 'Proxy falló');
-    return { data: json.data, meta: { source: 'proxy', cached: !!json.cached } };
-  }
-
   (async () => {
     try {
-      const data = await fetchEaDirect();
-      renderPlayers(data, { source: 'ea' });
-    } catch (errDirect) {
-      console.warn('EA directo falló (CORS/red):', errDirect);
-      setStatus('warning', 'No se pudo leer EA directo desde el navegador (CORS). Probando proxy PHP…');
+      const res = await fetch(PROXY_URL, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin',
+      });
+
+      const text = await res.text();
+      let json;
       try {
-        const proxied = await fetchProxy();
-        renderPlayers(proxied.data, proxied.meta);
-      } catch (errProxy) {
-        console.error(errProxy);
-        setStatus(
-          'danger',
-          `<strong>No se pudo cargar la plantilla.</strong><br>
-           Directo: ${escapeHtml(String(errDirect.message || errDirect))}<br>
-           Proxy: ${escapeHtml(String(errProxy.message || errProxy))}<br>
-           <small class="text-muted">Abre la API en otra pestaña para confirmar JSON, luego recarga.</small>`
-        );
+        json = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`El proxy no devolvió JSON (HTTP ${res.status}). ¿BASE_PATH / document root correctos? URL: ${PROXY_URL}`);
       }
+
+      if (!res.ok || !json.exito) {
+        throw new Error(json.mensaje || `HTTP ${res.status}`);
+      }
+
+      renderPlayers(json.data, { cached: !!json.cached });
+    } catch (err) {
+      console.error(err);
+      setStatus(
+        'danger',
+        `<strong>No se pudo cargar la plantilla.</strong><br>${escapeHtml(err.message || err)}
+         <hr>
+         <small>Prueba abrir en el navegador: <code>${escapeHtml(PROXY_URL)}</code></small>`
+      );
     }
   })();
 })();

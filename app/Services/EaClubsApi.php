@@ -90,16 +90,26 @@ class EaClubsApi
 
     private function get(string $url): array
     {
+        if (!function_exists('curl_init')) {
+            return ['ok' => false, 'error' => 'cURL no está habilitado en PHP', 'status' => 0];
+        }
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 20,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_ENCODING => '', // acepta gzip
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HTTPHEADER => [
-                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/112.0',
-                'Accept: application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept: application/json, text/plain, */*',
                 'Accept-Language: es-MX,es;q=0.9,en;q=0.8',
+                'Origin: https://www.ea.com',
                 'Referer: https://www.ea.com/',
+                'Connection: close',
             ],
         ]);
 
@@ -108,10 +118,19 @@ class EaClubsApi
         $err = curl_error($ch);
         curl_close($ch);
 
-        if ($body === false || $code >= 400) {
+        if ($body === false) {
             return [
                 'ok' => false,
-                'error' => $err !== '' ? $err : ("HTTP $code al consultar EA Clubs"),
+                'error' => $err !== '' ? $err : 'Fallo cURL sin cuerpo',
+                'status' => $code,
+            ];
+        }
+
+        if ($code >= 400) {
+            $snippet = trim(strip_tags(substr($body, 0, 180)));
+            return [
+                'ok' => false,
+                'error' => "EA respondió HTTP $code" . ($snippet !== '' ? ": $snippet" : ''),
                 'status' => $code,
             ];
         }
