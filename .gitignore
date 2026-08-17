@@ -1,0 +1,10 @@
+/vendor/
+.env
+.DS_Store
+*.log
+.idea/
+.vscode/
+frontend/
+node_modules/
+/storage/cache/*
+!/storage/cache/.gitkeep
