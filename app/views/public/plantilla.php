@@ -14,9 +14,9 @@ require __DIR__ . '/../layouts/public_header.php';
 
 <section class="page-hero text-white d-flex align-items-end">
     <div class="container position-relative z-2 pb-4">
-        <p class="text-white-50 mb-1 text-uppercase small fw-semibold">Club ID <?= htmlspecialchars($clubId) ?></p>
-        <h1 class="titulo-banner mb-2" style="font-size: clamp(2rem, 6vw, 3.5rem);">Plantilla</h1>
-        <p id="clubNameLabel" class="mb-0 fs-5"><?= htmlspecialchars($clubName) ?></p>
+
+        <h1 class="titulo-banner mb-2" style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--color-primary)">Plantilla</h1>
+        <p id="clubNameLabel" class="mb-0 fs-5" style="color: var(--color-primary)"><?= htmlspecialchars($clubName) ?></p>
     </div>
 </section>
 

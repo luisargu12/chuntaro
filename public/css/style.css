@@ -183,14 +183,12 @@ body {
   min-height: 38vh;
   padding-top: 120px;
   position: relative;
-  background: linear-gradient(135deg, #3a1814 0%, var(--color-primary) 55%, #6a322c 100%);
   overflow: hidden;
 }
 .page-hero::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(229, 178, 93, 0.25), transparent 45%);
   pointer-events: none;
 }
 .player-card {

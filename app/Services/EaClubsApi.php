@@ -88,6 +88,60 @@ class EaClubsApi
         return ['ok' => true, 'cached' => false, 'data' => $result['data']];
     }
 
+    /** Últimos partidos del club (liga, playoffs o amistosos). */
+    public function matches(
+        string $matchType = 'leagueMatch',
+        int $maxResults = 3,
+        bool $forceRefresh = false
+    ): array {
+        $allowedTypes = ['leagueMatch', 'playoffMatch', 'friendlyMatch'];
+        if (!in_array($matchType, $allowedTypes, true)) {
+            return ['ok' => false, 'error' => 'Tipo de partido no válido', 'status' => 422];
+        }
+
+        $maxResults = max(1, min($maxResults, 20));
+        $cacheKey = sprintf(
+            'matches_%s_%s_%s_%d',
+            $this->clubId(),
+            $this->platform(),
+            $matchType,
+            $maxResults
+        );
+        $ttl = (int) App::env('EA_CACHE_TTL', 300);
+
+        if (!$forceRefresh) {
+            $cached = $this->readCache($cacheKey, $ttl);
+            if ($cached !== null) {
+                return ['ok' => true, 'cached' => true, 'data' => $cached];
+            }
+        }
+
+        $url = $this->baseUrl . 'clubs/matches?' . http_build_query([
+            'platform' => $this->platform(),
+            'clubIds' => $this->clubId(),
+            'matchType' => $matchType,
+            'maxResultCount' => $maxResults,
+        ]);
+
+        $result = $this->get($url);
+        if (!$result['ok']) {
+            $stale = $this->readCache($cacheKey, PHP_INT_MAX);
+            if ($stale !== null) {
+                return [
+                    'ok' => true,
+                    'cached' => true,
+                    'stale' => true,
+                    'data' => $stale,
+                    'warning' => $result['error'],
+                ];
+            }
+            return $result;
+        }
+
+        $this->writeCache($cacheKey, $result['data']);
+        return ['ok' => true, 'cached' => false, 'data' => $result['data']];
+    }
+
     private function get(string $url): array
     {
         if (!function_exists('curl_init')) {

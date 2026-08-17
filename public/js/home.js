@@ -46,6 +46,125 @@
     tick();
   }
 
+  // Últimos partidos desde el proxy/cache de EA Clubs
+  const matchesEl = document.getElementById("recentMatches");
+  if (matchesEl) {
+    const endpoint = matchesEl.dataset.endpoint;
+    const clubId = String(matchesEl.dataset.clubId || "");
+
+    const escapeHtml = (value) =>
+      String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+    const matchDate = (timestamp) => {
+      const numericTimestamp = Number(timestamp);
+      if (!numericTimestamp) return "Partido finalizado";
+
+      const milliseconds =
+        numericTimestamp < 1000000000000 ? numericTimestamp * 1000 : numericTimestamp;
+
+      return new Intl.DateTimeFormat("es-MX", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(milliseconds));
+    };
+
+    const scoreValue = (club) =>
+      Number.parseInt(club?.goals ?? club?.score ?? 0, 10) || 0;
+
+    const renderMatches = (matches, cached = false) => {
+      if (!Array.isArray(matches) || matches.length === 0) {
+        matchesEl.innerHTML =
+          '<div class="col-12"><div class="alert alert-info text-center">EA no devolvió partidos de liga recientes.</div></div>';
+        return;
+      }
+
+      matchesEl.innerHTML = matches.slice(0, 3).map((match) => {
+        const clubs = match?.clubs && typeof match.clubs === "object" ? match.clubs : {};
+        const ownClub = clubs[clubId] || {};
+        const rivalEntry = Object.entries(clubs).find(([id]) => String(id) !== clubId);
+        const rivalClub = rivalEntry?.[1] || {};
+
+        const ownScore = scoreValue(ownClub);
+        const rivalScore = scoreValue(rivalClub);
+        const rivalName =
+          rivalClub?.details?.name || rivalClub?.name || "Equipo rival";
+
+        let resultClass = "text-bg-secondary";
+        let resultLabel = "Empate";
+        if (ownScore > rivalScore) {
+          resultClass = "text-bg-success";
+          resultLabel = "Victoria";
+        } else if (ownScore < rivalScore) {
+          resultClass = "text-bg-danger";
+          resultLabel = "Derrota";
+        }
+
+        return `
+          <div class="col-md-4">
+            <article class="card border-0 shadow-sm h-100 card-hover">
+              <div class="card-body p-4 text-center">
+                <p class="text-uppercase text-muted small fw-semibold mb-3">
+                  ${escapeHtml(matchDate(match?.timestamp))}
+                </p>
+                <div class="d-flex justify-content-between align-items-center gap-3">
+                  <div class="flex-fill">
+                    <h5 class="fw-bold mb-0">Chuntaro FC</h5>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <span class="fs-2 fw-bold">
+                      ${ownScore}
+                      <span class="text-muted mx-1">–</span>
+                      ${rivalScore}
+                    </span>
+                  </div>
+                  <div class="flex-fill">
+                    <h5 class="fw-bold mb-0">${escapeHtml(rivalName)}</h5>
+                  </div>
+                </div>
+                <span class="badge ${resultClass} mt-4">${resultLabel}</span>
+              </div>
+            </article>
+          </div>`;
+      }).join("");
+
+      if (cached) {
+        matchesEl.insertAdjacentHTML(
+          "beforeend",
+          '<div class="col-12"><p class="text-muted small text-center mb-0">Resultados servidos desde caché.</p></div>'
+        );
+      }
+    };
+
+    fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok || !payload.exito) {
+          throw new Error(payload.mensaje || `HTTP ${response.status}`);
+        }
+        return payload;
+      })
+      .then((payload) => renderMatches(payload.data, payload.cached))
+      .catch((error) => {
+        console.error("No se pudieron cargar los partidos:", error);
+        matchesEl.innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-warning text-center">
+              No se pudieron cargar los partidos desde EA Clubs:
+              ${escapeHtml(error.message || error)}
+            </div>
+          </div>`;
+      });
+  }
+
   // GSAP home animations
   if (typeof gsap === "undefined") return;
   if (typeof ScrollTrigger !== "undefined") {

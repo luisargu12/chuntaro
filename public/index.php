@@ -7,6 +7,7 @@ use App\Core\Router;
 use App\Core\Auth;
 use App\Controllers\AuthController;
 use App\Controllers\PlantillaController;
+use App\Controllers\PartidosController;
 
 App::load();
 
@@ -26,6 +27,7 @@ $router = new Router(__DIR__ . '/../app/views');
 $router->view('home', 'public/home.php', protegida: false);
 $router->get('plantilla', [PlantillaController::class, 'index']);
 $router->get('api/ea/members', [PlantillaController::class, 'membersApi']);
+$router->get('api/ea/matches', [PartidosController::class, 'latest']);
 
 $router->get('admin/logout', function () {
     Auth::logout();

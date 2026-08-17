@@ -56,33 +56,19 @@ require __DIR__ . '/../layouts/public_header.php';
     <div class="row text-center mb-5">
         <div class="col-12">
             <h2 class="fw-bold mb-3">Sigue la Liga Oficial</h2>
-            <p class="text-muted">Resultados, plantilla y torneos. Próximamente con datos en vivo.</p>
+            <p class="text-muted">Últimos resultados oficiales de Chuntaro FC.</p>
         </div>
     </div>
 
-    <div class="row g-4 mt-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 card-hover">
-                <div class="card-body p-5 text-center">
-                    <h4>Jornada 1</h4>
-                    <p class="text-muted">Resultados y goleadores del último encuentro.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 card-hover">
-                <div class="card-body p-5 text-center">
-                    <h4>Jornada 2</h4>
-                    <p class="text-muted">Estadísticas del partido en cancha oficial.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 card-hover">
-                <div class="card-body p-5 text-center">
-                    <h4>Jornada 3</h4>
-                    <p class="text-muted">Resumen de la fecha y jugadores destacados.</p>
-                </div>
+    <div
+        id="recentMatches"
+        class="row g-4 mt-4"
+        data-endpoint="<?= htmlspecialchars(App::url('/api/ea/matches?type=leagueMatch&limit=3')) ?>"
+        data-club-id="<?= htmlspecialchars((string) App::env('EA_CLUB_ID', '2043111')) ?>"
+    >
+        <div class="col-12">
+            <div class="alert alert-secondary text-center mb-0">
+                Cargando últimos partidos desde EA Clubs…
             </div>
         </div>
     </div>
