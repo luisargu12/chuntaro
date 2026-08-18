@@ -16,6 +16,7 @@ $docTitle = $pageTitle ? ($pageTitle . ' · ' . $appName . ' FC') : ($appName . 
     <title><?= htmlspecialchars($docTitle) ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="<?= htmlspecialchars(App::asset('css/style.css')) ?>">
+    <link rel="icon" href="<?= htmlspecialchars(App::asset('img/favicon.png')) ?>" type="image/x-icon">
 </head>
 <body>
 <nav id="mainNav" class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar <?= $navSolid ? 'navbar-solid shadow' : 'navbar-transparent' ?>">
