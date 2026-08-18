@@ -61,7 +61,21 @@ class Router
             return;
         }
 
-        $result = $this->callHandler($handler);
+        try {
+            $result = $this->callHandler($handler);
+        } catch (\Throwable $e) {
+            error_log('Ruta ' . $ruta . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+            if (!str_starts_with($ruta, 'api/')) {
+                throw $e;
+            }
+            http_response_code(500);
+            $mensaje = 'Error interno del servidor';
+            if (\App\Config\App::debug()) {
+                $mensaje = $e->getMessage();
+            }
+            echo json_encode(['exito' => false, 'mensaje' => $mensaje], JSON_UNESCAPED_UNICODE);
+            return;
+        }
 
         if (is_array($result)) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);

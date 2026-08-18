@@ -18,7 +18,12 @@ class AuthController
             return ['exito' => false, 'mensaje' => 'Usuario y contraseña son obligatorios'];
         }
 
-        $usuario = Usuario::buscarPorUsuario($usuario_txt);
+        try {
+            $usuario = Usuario::buscarPorUsuario($usuario_txt);
+        } catch (\PDOException $e) {
+            error_log('Login DB: ' . $e->getMessage());
+            return ['exito' => false, 'mensaje' => 'Error de conexión a la base de datos'];
+        }
 
         if (!$usuario || !password_verify($password, $usuario['password'])) {
             return ['exito' => false, 'mensaje' => 'Credenciales incorrectas'];

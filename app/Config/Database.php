@@ -25,11 +25,7 @@ class Database
             ]);
         } catch (PDOException $e) {
             error_log('DB Error: ' . $e->getMessage());
-            http_response_code(500);
-            if (App::debug()) {
-                die(json_encode(['error' => 'DB: ' . $e->getMessage()]));
-            }
-            die(json_encode(['error' => 'Error de conexión a la base de datos']));
+            throw $e;
         }
     }
 }

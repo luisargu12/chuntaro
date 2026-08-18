@@ -3,7 +3,6 @@ namespace App\Services;
 
 use App\Config\App;
 use App\Models\Partido;
-use PDOException;
 
 class EaClubsApi
 {
@@ -77,9 +76,9 @@ class EaClubsApi
                     $this->clubId(),
                     $this->platform()
                 );
-            } catch (PDOException $e) {
+            } catch (\Throwable $e) {
                 error_log('EA sync DB: ' . $e->getMessage());
-                $partidoWarning = 'Los partidos se cachearon, pero no se pudieron guardar en la base de datos';
+                $partidoWarning = 'Los partidos se cachearon, pero no se pudieron guardar en la base de datos: ' . $e->getMessage();
             }
         }
 
@@ -231,7 +230,7 @@ class EaClubsApi
                 $this->clubId(),
                 $this->platform()
             );
-        } catch (PDOException $e) {
+        } catch (\Throwable $e) {
             error_log('EA matches DB: ' . $e->getMessage());
         }
     }

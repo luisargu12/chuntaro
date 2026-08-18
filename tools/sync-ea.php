@@ -157,7 +157,7 @@ function postJson(string $url, array $payload, string $token): array
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_TIMEOUT => 90,
         CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json',
@@ -177,8 +177,11 @@ function postJson(string $url, array $payload, string $token): array
 
     $data = json_decode($body, true);
     if ($status >= 400 || !is_array($data) || !($data['exito'] ?? false)) {
-        $message = is_array($data) ? ($data['mensaje'] ?? "HTTP {$status}") : "HTTP {$status}: {$body}";
-        return ['ok' => false, 'error' => $message];
+        $snippet = is_array($data)
+            ? (string) ($data['mensaje'] ?? $data['error'] ?? json_encode($data, JSON_UNESCAPED_UNICODE))
+            : trim(strip_tags((string) $body));
+        $snippet = $snippet !== '' ? $snippet : '(respuesta vacía)';
+        return ['ok' => false, 'error' => "HTTP {$status}: {$snippet}"];
     }
 
     return ['ok' => true, 'data' => $data];
