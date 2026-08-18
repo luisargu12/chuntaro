@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Sync local → dominio.
+ *
+ * Hostinger no puede consultar la API de EA Clubs. Este script corre en la PC,
+ * pide plantilla/partidos a proclubs.ea.com y los POST a EA_SYNC_URL
+ * (https://chuntaro.com.mx/api/sync/ea). Producción solo recibe y guarda.
+ */
+
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -17,7 +25,7 @@ $clubId = (string) App::env('EA_CLUB_ID', '');
 $platform = (string) App::env('EA_PLATFORM', 'common-gen5');
 $syncUrl = (string) App::env('EA_SYNC_URL', '');
 $syncToken = (string) App::env('EA_SYNC_TOKEN', '');
-$matchLimit = 3;
+$matchLimit = max(1, min((int) App::env('EA_MATCH_LIMIT', 10), 20));
 
 if ($clubId === '' || $syncUrl === '' || strlen($syncToken) < 32) {
     fwrite(

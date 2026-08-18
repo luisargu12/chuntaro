@@ -2,6 +2,8 @@
 namespace App\Services;
 
 use App\Config\App;
+use App\Models\Partido;
+use PDOException;
 
 class EaClubsApi
 {
@@ -26,7 +28,7 @@ class EaClubsApi
         return (string) App::env('EA_PLATFORM', 'common-gen5');
     }
 
-    public function importSyncedData(array $resources, int $matchLimit = 3): array
+    public function importSyncedData(array $resources, int $matchLimit = 10): array
     {
         $stored = [];
 
@@ -48,6 +50,9 @@ class EaClubsApi
 
         $matchLimit = max(1, min($matchLimit, 20));
         $allowedTypes = ['leagueMatch', 'playoffMatch', 'friendlyMatch'];
+        $partidoReports = [];
+        $partidoWarning = null;
+
         foreach (($resources['matches'] ?? []) as $type => $matches) {
             if (!in_array($type, $allowedTypes, true) || !is_array($matches)) {
                 continue;
@@ -64,9 +69,25 @@ class EaClubsApi
                 $matches
             );
             $stored[] = 'matches.' . $type;
+
+            try {
+                $partidoReports[] = Partido::upsertFromEaList(
+                    $matches,
+                    (string) $type,
+                    $this->clubId(),
+                    $this->platform()
+                );
+            } catch (PDOException $e) {
+                error_log('EA sync DB: ' . $e->getMessage());
+                $partidoWarning = 'Los partidos se cachearon, pero no se pudieron guardar en la base de datos';
+            }
         }
 
-        return $stored;
+        return [
+            'recursos' => $stored,
+            'partidos' => Partido::mergeStats($partidoReports),
+            'partidosWarning' => $partidoWarning,
+        ];
     }
 
     /** Stats de miembros (plantilla) */
@@ -163,6 +184,7 @@ class EaClubsApi
         if (!$forceRefresh) {
             $cached = $this->readCache($cacheKey, $ttl);
             if ($cached !== null) {
+                $this->persistMatchesQuietly($cached, $matchType);
                 return ['ok' => true, 'cached' => true, 'data' => $cached];
             }
         }
@@ -194,7 +216,24 @@ class EaClubsApi
         }
 
         $this->writeCache($cacheKey, $result['data']);
+        $this->persistMatchesQuietly($result['data'], $matchType);
+
         return ['ok' => true, 'cached' => false, 'data' => $result['data']];
+    }
+
+    /** Guarda en tab_partidos sin romper la consulta si falla la DB. */
+    private function persistMatchesQuietly(array $matches, string $matchType): void
+    {
+        try {
+            Partido::upsertFromEaList(
+                $matches,
+                $matchType,
+                $this->clubId(),
+                $this->platform()
+            );
+        } catch (PDOException $e) {
+            error_log('EA matches DB: ' . $e->getMessage());
+        }
     }
 
     private function remoteFetchEnabled(): bool

@@ -47,22 +47,30 @@ class EaSyncController
             return ['exito' => false, 'mensaje' => 'No se recibieron recursos para sincronizar'];
         }
 
-        $stored = $api->importSyncedData(
+        $imported = $api->importSyncedData(
             $resources,
-            (int) ($payload['matchLimit'] ?? 3)
+            (int) ($payload['matchLimit'] ?? 10)
         );
 
+        $stored = $imported['recursos'] ?? [];
         if ($stored === []) {
             http_response_code(422);
             return ['exito' => false, 'mensaje' => 'Ningún recurso válido fue almacenado'];
         }
 
-        return [
+        $response = [
             'exito' => true,
             'mensaje' => 'Datos de EA sincronizados',
             'recursos' => $stored,
+            'partidos' => $imported['partidos'] ?? null,
             'sincronizadoEn' => gmdate(DATE_ATOM),
         ];
+
+        if (!empty($imported['partidosWarning'])) {
+            $response['warning'] = $imported['partidosWarning'];
+        }
+
+        return $response;
     }
 
     private function requestToken(): string

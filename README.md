@@ -31,14 +31,28 @@ Plantilla prod: `.env.production.example`
 
 ## Sincronización de EA Clubs
 
-EA bloquea las IP de Hostinger. Los datos se consultan desde la PC local y se
-envían al caché de producción mediante un endpoint protegido.
+EA bloquea las IP de Hostinger. **Nunca** se consulta `proclubs.ea.com` desde
+el dominio. La PC local pide los datos a EA y los sube a
+`https://chuntaro.com.mx/api/sync/ea`.
 
-1. Genera un token: `php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"`
-2. Coloca el mismo token en `EA_SYNC_TOKEN` del `.env` local y de Hostinger.
-3. En Hostinger usa `EA_REMOTE_FETCH_ENABLED=false`.
-4. Despliega el código.
-5. Desde la raíz local ejecuta: `php tools/sync-ea.php`
+Ese POST actualiza:
 
-El endpoint receptor es `POST /api/sync/ea`. Nunca publiques el token ni lo
-guardes en Git.
+- el caché en `storage/cache/` (plantilla / home)
+- `tab_partidos` (historial para el calendario: liga, playoff, amistoso)
+
+### En Hostinger
+
+1. `EA_REMOTE_FETCH_ENABLED=false`
+2. El mismo `EA_SYNC_TOKEN` que en local (mínimo 32 caracteres)
+3. Tabla `tab_partidos` creada (`sql/tab_partidos.sql`)
+4. Código desplegado (`Partido.php` + sync actualizado)
+
+### Desde esta PC (XAMPP / local)
+
+```bash
+php tools/sync-ea.php
+```
+
+El script usa `EA_SYNC_URL` y `EA_MATCH_LIMIT` del `.env` local (por defecto 10
+partidos por tipo). El endpoint receptor es `POST /api/sync/ea`. Nunca publiques
+el token ni lo guardes en Git.
