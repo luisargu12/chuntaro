@@ -10,14 +10,24 @@ class Database
     {
         App::load();
 
-        $host = App::env('DB_HOST', 'localhost');
-        $db = App::env('DB_NAME', '');
-        $user = App::env('DB_USER', 'root');
-        $pass = App::env('DB_PASS', '');
+        $host = (string) App::env('DB_HOST', 'localhost');
+        $db = (string) App::env('DB_NAME', '');
+        $user = (string) App::env('DB_USER', 'root');
+        $pass = (string) App::env('DB_PASS', '');
+        $port = (string) App::env('DB_PORT', '3306');
+
+        // XAMPP en Windows: TCP 127.0.0.1. Hostinger: dejar localhost
+        // (el usuario MySQL está autorizado en @localhost, no en @127.0.0.1).
+        if (App::envName() === 'local' && $host === 'localhost') {
+            $host = '127.0.0.1';
+        }
 
         try {
-            $tcpHost = ($host === 'localhost') ? '127.0.0.1' : $host;
-            $dsn = "mysql:host=$tcpHost;port=3306;dbname=$db;charset=utf8mb4";
+            if ($host === 'localhost') {
+                $dsn = "mysql:host=localhost;dbname=$db;charset=utf8mb4";
+            } else {
+                $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
+            }
             return new PDO($dsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
