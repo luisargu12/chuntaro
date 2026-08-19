@@ -65,6 +65,12 @@ require __DIR__ . '/../layouts/public_header.php';
         class="row g-4 mt-4"
         data-endpoint="<?= htmlspecialchars(App::url('/api/ea/matches?type=leagueMatch&limit=3')) ?>"
         data-club-id="<?= htmlspecialchars((string) App::env('EA_CLUB_ID', '2043111')) ?>"
+        data-own-crest="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
+        data-crest-base="<?= htmlspecialchars((string) App::env(
+            'EA_CREST_CDN_BASE',
+            'https://eafc26.content.easports.com/fc/fltOnlineAssets/26E4D4D6-8DBB-4A9A-BD99-9C47D3AA341D/2026/fcweb/crests/256x256'
+        )) ?>"
+        data-crest-fallback="https://media.contentapi.ea.com/content/dam/eacom/fc/pro-clubs/notfound-crest.png"
     >
         <div class="col-12">
             <div class="alert alert-secondary text-center mb-0">

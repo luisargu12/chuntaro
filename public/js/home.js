@@ -51,6 +51,9 @@
   if (matchesEl) {
     const endpoint = matchesEl.dataset.endpoint;
     const clubId = String(matchesEl.dataset.clubId || "");
+    const ownCrestUrl = matchesEl.dataset.ownCrest || "";
+    const crestBase = String(matchesEl.dataset.crestBase || "").replace(/\/+$/, "");
+    const crestFallback = matchesEl.dataset.crestFallback || "";
 
     const escapeHtml = (value) =>
       String(value)
@@ -77,6 +80,18 @@
     const scoreValue = (club) =>
       Number.parseInt(club?.goals ?? club?.score ?? 0, 10) || 0;
 
+    const rivalCrestUrl = (club) => {
+      const crestId =
+        club?.details?.customKit?.crestAssetId ??
+        club?.customKit?.crestAssetId ??
+        club?.TEAM ??
+        "";
+
+      return /^\d+$/.test(String(crestId)) && crestBase
+        ? `${crestBase}/l${crestId}.png`
+        : crestFallback;
+    };
+
     const renderMatches = (matches, cached = false) => {
       if (!Array.isArray(matches) || matches.length === 0) {
         matchesEl.innerHTML =
@@ -94,6 +109,7 @@
         const rivalScore = scoreValue(rivalClub);
         const rivalName =
           rivalClub?.details?.name || rivalClub?.name || "Equipo rival";
+        const rivalImage = rivalCrestUrl(rivalClub);
 
         let resultClass = "text-bg-secondary";
         let resultLabel = "Empate";
@@ -113,7 +129,13 @@
                   ${escapeHtml(matchDate(match?.timestamp))}
                 </p>
                 <div class="d-flex justify-content-between align-items-center gap-3">
-                  <div class="flex-fill">
+                  <div class="match-team flex-fill">
+                    <img
+                      class="match-crest mb-2"
+                      src="${escapeHtml(ownCrestUrl)}"
+                      data-fallback="${escapeHtml(crestFallback)}"
+                      alt="Escudo Chuntaro FC"
+                    >
                     <h5 class="fw-bold mb-0">Chuntaro FC</h5>
                   </div>
                   <div class="flex-shrink-0">
@@ -123,7 +145,13 @@
                       ${rivalScore}
                     </span>
                   </div>
-                  <div class="flex-fill">
+                  <div class="match-team flex-fill">
+                    <img
+                      class="match-crest mb-2"
+                      src="${escapeHtml(rivalImage)}"
+                      data-fallback="${escapeHtml(crestFallback)}"
+                      alt="Escudo ${escapeHtml(rivalName)}"
+                    >
                     <h5 class="fw-bold mb-0">${escapeHtml(rivalName)}</h5>
                   </div>
                 </div>
@@ -132,6 +160,15 @@
             </article>
           </div>`;
       }).join("");
+
+      matchesEl.querySelectorAll(".match-crest").forEach((image) => {
+        image.addEventListener("error", () => {
+          const fallback = image.dataset.fallback;
+          if (fallback && image.src !== fallback) {
+            image.src = fallback;
+          }
+        });
+      });
 
       if (cached) {
         matchesEl.insertAdjacentHTML(

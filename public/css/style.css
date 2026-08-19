@@ -203,3 +203,26 @@ body {
 .player-card .text-accent {
   color: var(--color-primary);
 }
+
+/* Escudos en los últimos partidos */
+.match-team {
+  min-width: 0;
+}
+
+.match-crest {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.16));
+}
+
+.match-team h5 {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 575.98px) {
+  .match-crest {
+    width: 56px;
+    height: 56px;
+  }
+}
