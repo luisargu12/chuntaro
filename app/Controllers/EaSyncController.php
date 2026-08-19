@@ -62,12 +62,17 @@ class EaSyncController
             'exito' => true,
             'mensaje' => 'Datos de EA sincronizados',
             'recursos' => $stored,
+            'clubes' => $imported['clubes'] ?? null,
             'partidos' => $imported['partidos'] ?? null,
             'sincronizadoEn' => gmdate(DATE_ATOM),
         ];
 
-        if (!empty($imported['partidosWarning'])) {
-            $response['warning'] = $imported['partidosWarning'];
+        $warnings = array_values(array_filter([
+            $imported['clubesWarning'] ?? null,
+            $imported['partidosWarning'] ?? null,
+        ]));
+        if ($warnings !== []) {
+            $response['warning'] = implode(' | ', $warnings);
         }
 
         return $response;

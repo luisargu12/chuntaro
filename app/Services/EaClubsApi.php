@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Config\App;
+use App\Models\Club;
 use App\Models\Partido;
 
 class EaClubsApi
@@ -30,6 +31,8 @@ class EaClubsApi
     public function importSyncedData(array $resources, int $matchLimit = 10): array
     {
         $stored = [];
+        $clubStats = ['guardados' => 0, 'omitidos' => 0];
+        $clubWarning = null;
 
         if (isset($resources['members']) && is_array($resources['members'])) {
             $this->writeCache(
@@ -45,6 +48,19 @@ class EaClubsApi
                 $resources['clubInfo']
             );
             $stored[] = 'clubInfo';
+
+            try {
+                $report = Club::upsertFromClubInfo(
+                    $resources['clubInfo'],
+                    $this->clubId()
+                );
+                $clubStats['guardados'] += $report['guardados'];
+                $clubStats['omitidos'] += $report['omitidos'];
+            } catch (\Throwable $e) {
+                error_log('EA sync clubs: ' . $e->getMessage());
+                $clubWarning = 'La información de clubes se cacheó, pero no pudo guardarse en la base de datos: '
+                    . $e->getMessage();
+            }
         }
 
         $matchLimit = max(1, min($matchLimit, 20));
@@ -70,6 +86,16 @@ class EaClubsApi
             $stored[] = 'matches.' . $type;
 
             try {
+                $report = Club::upsertFromMatches($matches, $this->clubId());
+                $clubStats['guardados'] += $report['guardados'];
+                $clubStats['omitidos'] += $report['omitidos'];
+            } catch (\Throwable $e) {
+                error_log('EA sync rival clubs: ' . $e->getMessage());
+                $clubWarning = 'Los rivales se cachearon, pero no pudieron guardarse en la base de datos: '
+                    . $e->getMessage();
+            }
+
+            try {
                 $partidoReports[] = Partido::upsertFromEaList(
                     $matches,
                     (string) $type,
@@ -84,6 +110,8 @@ class EaClubsApi
 
         return [
             'recursos' => $stored,
+            'clubes' => $clubStats,
+            'clubesWarning' => $clubWarning,
             'partidos' => Partido::mergeStats($partidoReports),
             'partidosWarning' => $partidoWarning,
         ];
