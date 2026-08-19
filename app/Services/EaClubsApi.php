@@ -5,6 +5,7 @@ use App\Config\App;
 use App\Models\Club;
 use App\Models\Jugador;
 use App\Models\Partido;
+use App\Models\PartidoEstadistica;
 use App\Models\PartidoJugador;
 
 class EaClubsApi
@@ -92,6 +93,8 @@ class EaClubsApi
         $partidoWarning = null;
         $detalleReports = [];
         $detalleWarning = null;
+        $estadisticaReports = [];
+        $estadisticaWarning = null;
 
         foreach (($resources['matches'] ?? []) as $type => $matches) {
             if (!in_array($type, $allowedTypes, true) || !is_array($matches)) {
@@ -142,6 +145,17 @@ class EaClubsApi
                 $detalleWarning = 'El detalle de jugadores por partido no pudo guardarse: '
                     . $e->getMessage();
             }
+
+            try {
+                $estadisticaReports[] = PartidoEstadistica::upsertFromEaList(
+                    $matches,
+                    $this->clubId()
+                );
+            } catch (\Throwable $e) {
+                error_log('EA sync match stats: ' . $e->getMessage());
+                $estadisticaWarning = 'Las estadísticas generales de los partidos no pudieron guardarse: '
+                    . $e->getMessage();
+            }
         }
 
         return [
@@ -154,6 +168,8 @@ class EaClubsApi
             'partidosWarning' => $partidoWarning,
             'partidoJugadores' => PartidoJugador::mergeStats($detalleReports),
             'partidoJugadoresWarning' => $detalleWarning,
+            'partidoEstadisticas' => PartidoEstadistica::mergeStats($estadisticaReports),
+            'partidoEstadisticasWarning' => $estadisticaWarning,
         ];
     }
 

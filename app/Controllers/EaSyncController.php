@@ -66,6 +66,7 @@ class EaSyncController
             'jugadores' => $imported['jugadores'] ?? null,
             'partidos' => $imported['partidos'] ?? null,
             'partidoJugadores' => $imported['partidoJugadores'] ?? null,
+            'partidoEstadisticas' => $imported['partidoEstadisticas'] ?? null,
             'sincronizadoEn' => gmdate(DATE_ATOM),
         ];
 
@@ -74,6 +75,7 @@ class EaSyncController
             $imported['jugadoresWarning'] ?? null,
             $imported['partidosWarning'] ?? null,
             $imported['partidoJugadoresWarning'] ?? null,
+            $imported['partidoEstadisticasWarning'] ?? null,
         ]));
         if ($warnings !== []) {
             $response['warning'] = implode(' | ', $warnings);
