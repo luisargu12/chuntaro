@@ -16,13 +16,9 @@ class Database
         $pass = (string) App::env('DB_PASS', '');
         $port = (string) App::env('DB_PORT', '3306');
 
-        // XAMPP en Windows: TCP 127.0.0.1. Hostinger: dejar localhost
-        // (el usuario MySQL está autorizado en @localhost, no en @127.0.0.1).
-        if (App::envName() === 'local' && $host === 'localhost') {
-            $host = '127.0.0.1';
-        }
-
         try {
+            // localhost sin puerto = socket Unix (Hostinger: user@localhost).
+            // 127.0.0.1 = TCP (XAMPP en Windows). No reescribir el host.
             if ($host === 'localhost') {
                 $dsn = "mysql:host=localhost;dbname=$db;charset=utf8mb4";
             } else {

@@ -171,12 +171,18 @@ class EaClubsApi
         }
 
         $maxResults = max(1, min($maxResults, 20));
+        // La sincronización guarda un lote mayor (EA_MATCH_LIMIT). Las vistas
+        // pueden pedir menos resultados sin necesitar otro archivo de caché.
+        $cacheLimit = max(
+            $maxResults,
+            max(1, min((int) App::env('EA_MATCH_LIMIT', 10), 20))
+        );
         $cacheKey = sprintf(
             'matches_%s_%s_%s_%d',
             $this->clubId(),
             $this->platform(),
             $matchType,
-            $maxResults
+            $cacheLimit
         );
         $ttl = (int) App::env('EA_CACHE_TTL', 300);
 
@@ -184,19 +190,31 @@ class EaClubsApi
             $cached = $this->readCache($cacheKey, $ttl);
             if ($cached !== null) {
                 $this->persistMatchesQuietly($cached, $matchType);
-                return ['ok' => true, 'cached' => true, 'data' => $cached];
+                return [
+                    'ok' => true,
+                    'cached' => true,
+                    'data' => array_slice(array_values($cached), 0, $maxResults),
+                ];
             }
         }
 
         if (!$this->remoteFetchEnabled()) {
-            return $this->staleCacheOrError($cacheKey);
+            $result = $this->staleCacheOrError($cacheKey);
+            if ($result['ok'] ?? false) {
+                $result['data'] = array_slice(
+                    array_values($result['data']),
+                    0,
+                    $maxResults
+                );
+            }
+            return $result;
         }
 
         $url = $this->baseUrl . 'clubs/matches?' . http_build_query([
             'platform' => $this->platform(),
             'clubIds' => $this->clubId(),
             'matchType' => $matchType,
-            'maxResultCount' => $maxResults,
+            'maxResultCount' => $cacheLimit,
         ]);
 
         $result = $this->get($url);
@@ -207,7 +225,7 @@ class EaClubsApi
                     'ok' => true,
                     'cached' => true,
                     'stale' => true,
-                    'data' => $stale,
+                    'data' => array_slice(array_values($stale), 0, $maxResults),
                     'warning' => $result['error'],
                 ];
             }
@@ -217,7 +235,11 @@ class EaClubsApi
         $this->writeCache($cacheKey, $result['data']);
         $this->persistMatchesQuietly($result['data'], $matchType);
 
-        return ['ok' => true, 'cached' => false, 'data' => $result['data']];
+        return [
+            'ok' => true,
+            'cached' => false,
+            'data' => array_slice(array_values($result['data']), 0, $maxResults),
+        ];
     }
 
     /** Guarda en tab_partidos sin romper la consulta si falla la DB. */
