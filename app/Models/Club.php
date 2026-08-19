@@ -6,6 +6,18 @@ use App\Config\Database;
 
 class Club
 {
+    public static function idByEaId(string $eaClubId): ?int
+    {
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT id_club FROM tab_clubes WHERE ea_club_id = :ea_club_id LIMIT 1'
+        );
+        $stmt->execute([':ea_club_id' => $eaClubId]);
+        $id = $stmt->fetchColumn();
+
+        return $id === false ? null : (int) $id;
+    }
+
     /**
      * Guarda la respuesta de /clubs/info.
      *

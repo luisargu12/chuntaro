@@ -3,7 +3,9 @@ namespace App\Services;
 
 use App\Config\App;
 use App\Models\Club;
+use App\Models\Jugador;
 use App\Models\Partido;
+use App\Models\PartidoJugador;
 
 class EaClubsApi
 {
@@ -63,10 +65,33 @@ class EaClubsApi
             }
         }
 
+        $jugadorStats = [
+            'insertados' => 0,
+            'actualizados' => 0,
+            'estadisticas' => 0,
+            'omitidos' => 0,
+        ];
+        $jugadorWarning = null;
+
+        if (isset($resources['members']) && is_array($resources['members'])) {
+            try {
+                $jugadorStats = Jugador::upsertFromMembers(
+                    $resources['members'],
+                    $this->clubId()
+                );
+            } catch (\Throwable $e) {
+                error_log('EA sync roster: ' . $e->getMessage());
+                $jugadorWarning = 'La plantilla se cacheó, pero no pudo guardarse en la base de datos: '
+                    . $e->getMessage();
+            }
+        }
+
         $matchLimit = max(1, min($matchLimit, 20));
         $allowedTypes = ['leagueMatch', 'playoffMatch', 'friendlyMatch'];
         $partidoReports = [];
         $partidoWarning = null;
+        $detalleReports = [];
+        $detalleWarning = null;
 
         foreach (($resources['matches'] ?? []) as $type => $matches) {
             if (!in_array($type, $allowedTypes, true) || !is_array($matches)) {
@@ -106,14 +131,29 @@ class EaClubsApi
                 error_log('EA sync DB: ' . $e->getMessage());
                 $partidoWarning = 'Los partidos se cachearon, pero no se pudieron guardar en la base de datos: ' . $e->getMessage();
             }
+
+            try {
+                $detalleReports[] = PartidoJugador::upsertFromEaList(
+                    $matches,
+                    $this->clubId()
+                );
+            } catch (\Throwable $e) {
+                error_log('EA sync match players: ' . $e->getMessage());
+                $detalleWarning = 'El detalle de jugadores por partido no pudo guardarse: '
+                    . $e->getMessage();
+            }
         }
 
         return [
             'recursos' => $stored,
             'clubes' => $clubStats,
             'clubesWarning' => $clubWarning,
+            'jugadores' => $jugadorStats,
+            'jugadoresWarning' => $jugadorWarning,
             'partidos' => Partido::mergeStats($partidoReports),
             'partidosWarning' => $partidoWarning,
+            'partidoJugadores' => PartidoJugador::mergeStats($detalleReports),
+            'partidoJugadoresWarning' => $detalleWarning,
         ];
     }
 
