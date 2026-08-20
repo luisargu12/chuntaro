@@ -46,10 +46,9 @@ require __DIR__ . '/../layouts/public_header.php';
                 <div>
                     <p class="fc-eyebrow mb-2">La cancha de los martes</p>
                     <h2 class="home-section-title mb-0">
-                        Nuestros últimos partidos en<br>Kalcho Martes Botanero
+                        Kalcho Martes Botanero
                     </h2>
                 </div>
-                <span class="home-section-index" aria-hidden="true">01</span>
             </div>
 
             <article class="kalcho-coming-soon">

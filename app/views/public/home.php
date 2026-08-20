@@ -23,7 +23,7 @@ require __DIR__ . '/../layouts/public_header.php';
             <div class="row align-items-center g-5">
                 <div class="col-lg-7">
                     <p class="fc-eyebrow mb-3">EA FC 26 · Pro Clubs</p>
-                    <h2 class="fc-display mb-4">Los alergicos a la primera división.</h2>
+                    <h2 class="fc-display mb-4">Alérgicos a la primera división.</h2>
                     <p class="fc-lead mb-4">
                         Sigue cada resultado, conoce a la plantilla y revisa el rendimiento
                         de Chuntaro FC en su camino por la liga EA FC 26.
@@ -37,17 +37,34 @@ require __DIR__ . '/../layouts/public_header.php';
 
                 <div class="col-lg-5">
                     <article class="fc-identity-card">
-                        <span class="fc-live-badge"><i></i></span>
                         <img src="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
                              alt="Escudo de Chuntaro FC"
                              class="fc-identity-crest">
                         <div>
-                            <p class="fc-card-kicker mb-1">Club virtual</p>
+                            <p class="fc-card-kicker mb-1">FC Clubs</p>
                             <h3 class="mb-1">Chuntaro FC</h3>
                             <p class="mb-0">Club ID <?= htmlspecialchars((string) App::env('EA_CLUB_ID', '2043111')) ?></p>
                         </div>
                     </article>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="fc-overview-section">
+        <div class="container">
+            <div class="fc-section-heading fc-section-heading-dark">
+                <div>
+                    <p class="fc-eyebrow mb-2">Trayectoria del club</p>
+                    <h2 class="fc-display mb-0">Club en números</h2>
+                </div>
+            </div>
+
+            <div
+                id="clubOverview"
+                data-endpoint="<?= htmlspecialchars(App::url('/fc-clubs/api/overview')) ?>"
+            >
+                <div class="fc-overview-loading">Cargando historia del club…</div>
             </div>
         </div>
     </section>

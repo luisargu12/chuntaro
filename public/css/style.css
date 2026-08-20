@@ -324,7 +324,7 @@ body {
   position: relative;
   min-height: 350px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 1.5rem;
   overflow: hidden;
   padding: 2rem;
@@ -596,14 +596,14 @@ body {
 }
 
 .roster-hero::after {
-  content: "CHUNTARO";
+  content: "";
   position: absolute;
-  right: -1rem;
-  bottom: -2.5rem;
-  color: rgba(255, 255, 255, 0.025);
-  font-family: "Black Ops One", sans-serif;
-  font-size: clamp(6rem, 16vw, 13rem);
-  line-height: 1;
+  right: clamp(-6rem, -4vw, -2rem);
+  bottom: clamp(-8rem, -7vw, -4rem);
+  width: clamp(20rem, 42vw, 40rem);
+  aspect-ratio: 154 / 148;
+  background: url("../img/player-hero-mark.svg") center / contain no-repeat;
+  opacity: 0.035;
   pointer-events: none;
 }
 
@@ -932,7 +932,7 @@ body {
 
 /* Historial de partidos FC Clubs */
 .matches-hero::after {
-  content: "PARTIDOS";
+  content: "";
 }
 
 .match-history-page {
@@ -1678,14 +1678,14 @@ body {
 }
 
 .player-profile-hero::after {
-  content: "PLAYER";
+  content: "";
   position: absolute;
-  right: -1rem;
-  bottom: -2rem;
-  color: rgba(255, 255, 255, 0.025);
-  font-family: "Black Ops One", sans-serif;
-  font-size: clamp(7rem, 18vw, 15rem);
-  line-height: 0.8;
+  right: clamp(-6rem, -4vw, -2rem);
+  bottom: clamp(-8rem, -7vw, -4rem);
+  width: clamp(20rem, 42vw, 40rem);
+  aspect-ratio: 154 / 148;
+  background: url("../img/player-hero-mark.svg") center / contain no-repeat;
+  opacity: 0.035;
   pointer-events: none;
 }
 
@@ -2185,5 +2185,304 @@ body {
   .player-match-numbers {
     overflow-x: auto;
     grid-template-columns: repeat(5, minmax(70px, 1fr));
+  }
+}
+
+/* Resumen histórico en FC Clubs */
+.fc-overview-section {
+  padding: clamp(4.5rem, 9vw, 8rem) 0;
+  background: #ded7ce;
+}
+
+.fc-overview-loading,
+.fc-overview-error {
+  padding: 2.5rem;
+  border: 1px solid #c9beb3;
+  color: #766965;
+  text-align: center;
+}
+
+.fc-overview-error {
+  background: #f1dada;
+  color: #8c3434;
+}
+
+.fc-overview-main {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 2fr);
+  gap: 1rem;
+}
+
+.fc-overview-rating,
+.fc-overview-record {
+  min-height: 250px;
+  padding: clamp(1.75rem, 4vw, 3rem);
+}
+
+.fc-overview-rating {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.fc-overview-rating p,
+.fc-overview-rating span {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fc-overview-rating p {
+  color: var(--color-accent);
+}
+
+.fc-overview-rating strong {
+  margin: 0.75rem 0;
+  color: #fff;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  line-height: 0.9;
+}
+
+.fc-overview-rating span {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.fc-overview-record {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+  border-top: 4px solid var(--color-primary);
+}
+
+.fc-overview-record-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 2rem;
+}
+
+.fc-overview-record-head > div + div {
+  padding-left: 2rem;
+  border-left: 1px solid #e8e0d8;
+}
+
+.fc-overview-record-head strong,
+.fc-overview-record-head span {
+  display: block;
+}
+
+.fc-overview-record-head strong {
+  color: #2d2220;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1;
+}
+
+.fc-overview-record-head span {
+  margin-top: 0.5rem;
+  color: #948782;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fc-record-bar {
+  height: 10px;
+  display: flex;
+  overflow: hidden;
+  background: #e7e0d9;
+}
+
+.fc-record-bar i {
+  height: 100%;
+}
+
+.fc-record-win {
+  background: #3d9b60;
+}
+
+.fc-record-draw {
+  background: var(--color-accent);
+}
+
+.fc-record-loss {
+  background: #b84343;
+}
+
+.fc-record-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 0.9rem;
+  color: #786b67;
+  font-size: 0.7rem;
+}
+
+.fc-record-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.fc-record-legend i {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.fc-overview-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 1rem;
+  background: #eee8e1;
+}
+
+.fc-overview-kpis > div {
+  padding: 1.5rem 0.75rem;
+  border-right: 1px solid #d3c9bf;
+  text-align: center;
+}
+
+.fc-overview-kpis > div:last-child {
+  border-right: 0;
+}
+
+.fc-overview-kpis strong,
+.fc-overview-kpis span {
+  display: block;
+}
+
+.fc-overview-kpis strong {
+  color: var(--color-primary);
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.fc-overview-kpis span {
+  margin-top: 0.35rem;
+  color: #897c77;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fc-overview-foot {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.fc-overview-streaks,
+.fc-playoff-achievements {
+  padding: 1.75rem;
+  background: #fff;
+}
+
+.fc-overview-streaks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.fc-overview-streaks > div {
+  padding: 0 1rem;
+  border-right: 1px solid #e8e1da;
+}
+
+.fc-overview-streaks > div:first-child {
+  padding-left: 0;
+}
+
+.fc-overview-streaks > div:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.fc-overview-streaks span,
+.fc-overview-streaks strong,
+.fc-overview-streaks small {
+  display: block;
+}
+
+.fc-overview-streaks span {
+  color: #9a8d88;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fc-overview-streaks strong {
+  margin-top: 0.45rem;
+  color: #392d2a;
+}
+
+.fc-overview-streaks small {
+  margin-top: 0.3rem;
+  color: #9a8d88;
+  font-size: 0.65rem;
+}
+
+.fc-playoff-achievements > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid #ece5de;
+}
+
+.fc-playoff-achievements > div strong {
+  color: #3a2e2b;
+  font-size: 0.8rem;
+}
+
+.fc-playoff-achievements > div span {
+  color: #91847f;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 991.98px) {
+  .fc-overview-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .fc-overview-foot {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .fc-overview-main {
+    grid-template-columns: 1fr;
+  }
+
+  .fc-overview-record-head {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .fc-overview-record-head > div + div {
+    padding: 1.5rem 0 0;
+    border-top: 1px solid #e8e0d8;
+    border-left: 0;
+  }
+
+  .fc-overview-kpis,
+  .fc-overview-streaks {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fc-overview-streaks > div {
+    padding: 0.75rem;
+    border: 0;
   }
 }

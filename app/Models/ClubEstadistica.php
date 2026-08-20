@@ -7,6 +7,141 @@ use RuntimeException;
 class ClubEstadistica
 {
     /**
+     * @return array<string,mixed>|null
+     */
+    public static function publicOverview(string $eaClubId): ?array
+    {
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT
+                e.partidos_jugados, e.apariciones_liga, e.partidos_playoff,
+                e.victorias, e.empates, e.derrotas, e.goles_favor,
+                e.goles_contra, e.skill_rating, e.mejor_division,
+                e.mejor_grupo_final, e.ascensos, e.descensos,
+                e.nivel_reputacion, e.racha_invicto, e.racha_victorias,
+                e.sincronizado_en, c.id_club, c.nombre
+             FROM tab_club_estadisticas e
+             INNER JOIN tab_clubes c ON c.id_club = e.id_club
+             WHERE c.ea_club_id = :ea_club_id
+             LIMIT 1'
+        );
+        $stmt->execute([':ea_club_id' => $eaClubId]);
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+
+        $achievementStmt = $pdo->prepare(
+            'SELECT season_id, season_name, mejor_division,
+                    mejor_grupo_final, sincronizado_en
+             FROM tab_club_logros_playoff
+             WHERE id_club = :id_club
+             ORDER BY CAST(season_id AS UNSIGNED) DESC
+             LIMIT 10'
+        );
+        $achievementStmt->execute([':id_club' => (int) $row['id_club']]);
+
+        $resultsStmt = $pdo->prepare(
+            'SELECT resultado
+             FROM tab_partidos
+             WHERE club_id = :ea_club_id
+             ORDER BY timestamp_ea DESC'
+        );
+        $resultsStmt->execute([':ea_club_id' => $eaClubId]);
+        $results = $resultsStmt->fetchAll();
+        $currentStreak = ['result' => null, 'count' => 0];
+        if ($results !== []) {
+            $currentStreak['result'] = $results[0]['resultado'];
+            foreach ($results as $result) {
+                if ($result['resultado'] !== $currentStreak['result']) {
+                    break;
+                }
+                $currentStreak['count']++;
+            }
+        }
+
+        $nemesisStmt = $pdo->prepare(
+            'SELECT rival_club_id, MAX(rival_nombre) AS rival_nombre,
+                    COUNT(*) AS partidos
+             FROM tab_partidos
+             WHERE club_id = :ea_club_id
+             GROUP BY rival_club_id
+             ORDER BY partidos DESC, MAX(jugado_en) DESC
+             LIMIT 1'
+        );
+        $nemesisStmt->execute([':ea_club_id' => $eaClubId]);
+        $nemesis = $nemesisStmt->fetch();
+
+        $bestVictoryStmt = $pdo->prepare(
+            'SELECT rival_club_id, rival_nombre, goles_favor,
+                    goles_contra, jugado_en
+             FROM tab_partidos
+             WHERE club_id = :ea_club_id AND resultado = :resultado
+             ORDER BY (goles_favor - goles_contra) DESC,
+                      goles_favor DESC, jugado_en DESC
+             LIMIT 1'
+        );
+        $bestVictoryStmt->execute([
+            ':ea_club_id' => $eaClubId,
+            ':resultado' => 'victoria',
+        ]);
+        $bestVictory = $bestVictoryStmt->fetch();
+
+        $games = (int) $row['partidos_jugados'];
+
+        return [
+            'clubName' => $row['nombre'],
+            'gamesPlayed' => $games,
+            'leagueAppearances' => (int) $row['apariciones_liga'],
+            'playoffGames' => (int) $row['partidos_playoff'],
+            'wins' => (int) $row['victorias'],
+            'draws' => (int) $row['empates'],
+            'losses' => (int) $row['derrotas'],
+            'goalsFor' => (int) $row['goles_favor'],
+            'goalsAgainst' => (int) $row['goles_contra'],
+            'goalDifference' => (int) $row['goles_favor'] - (int) $row['goles_contra'],
+            'winRate' => $games > 0
+                ? round(((int) $row['victorias'] / $games) * 100, 1)
+                : 0,
+            'skillRating' => (int) $row['skill_rating'],
+            'bestDivision' => self::nullableInt($row['mejor_division']),
+            'bestFinishGroup' => self::nullableInt($row['mejor_grupo_final']),
+            'promotions' => (int) $row['ascensos'],
+            'relegations' => (int) $row['descensos'],
+            'reputationTier' => self::nullableInt($row['nivel_reputacion']),
+            'unbeatenStreak' => (int) $row['racha_invicto'],
+            'winStreak' => (int) $row['racha_victorias'],
+            'currentStreak' => $currentStreak,
+            'nemesis' => $nemesis === false
+                ? null
+                : [
+                    'clubId' => (string) $nemesis['rival_club_id'],
+                    'name' => $nemesis['rival_nombre'],
+                    'matches' => (int) $nemesis['partidos'],
+                ],
+            'bestVictory' => $bestVictory === false
+                ? null
+                : [
+                    'clubId' => (string) $bestVictory['rival_club_id'],
+                    'name' => $bestVictory['rival_nombre'],
+                    'goalsFor' => (int) $bestVictory['goles_favor'],
+                    'goalsAgainst' => (int) $bestVictory['goles_contra'],
+                    'playedAt' => $bestVictory['jugado_en'],
+                ],
+            'syncedAt' => $row['sincronizado_en'],
+            'playoffAchievements' => array_map(
+                static fn (array $achievement): array => [
+                    'seasonId' => (string) $achievement['season_id'],
+                    'seasonName' => $achievement['season_name'],
+                    'bestDivision' => self::nullableInt($achievement['mejor_division']),
+                    'bestFinishGroup' => self::nullableInt($achievement['mejor_grupo_final']),
+                ],
+                $achievementStmt->fetchAll()
+            ),
+        ];
+    }
+
+    /**
      * @return array{guardados:int,omitidos:int}
      */
     public static function upsertOverallStats(array $data, string $principalClubId): array
