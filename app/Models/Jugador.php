@@ -7,6 +7,189 @@ use RuntimeException;
 
 class Jugador
 {
+    public static function gamertagFromSlug(string $slug, string $eaClubId): ?string
+    {
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT j.gamertag
+             FROM tab_jugadores j
+             INNER JOIN tab_clubes c ON c.id_club = j.id_club
+             WHERE c.ea_club_id = :ea_club_id'
+        );
+        $stmt->execute([':ea_club_id' => $eaClubId]);
+
+        foreach ($stmt->fetchAll() as $row) {
+            $gamertag = (string) $row['gamertag'];
+            if (self::slug($gamertag) === strtolower(trim($slug))) {
+                return $gamertag;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Perfil público completo de un jugador.
+     *
+     * @return array<string,mixed>|null
+     */
+    public static function profileForPublic(string $gamertag, string $eaClubId): ?array
+    {
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT
+                j.id_jugador, j.ea_player_id, j.gamertag, j.pro_name,
+                j.favorite_position, j.pro_position, j.nacionalidad_id,
+                j.altura_cm, j.overall, j.foto_url, j.foto_path, j.activo,
+                e.partidos_jugados, e.win_rate, e.goles, e.asistencias,
+                e.rating_promedio, e.man_of_the_match, e.tarjetas_rojas,
+                e.porterias_defensa, e.porterias_portero,
+                e.pases_completados, e.porcentaje_pases,
+                e.tackles_completados, e.porcentaje_tackles,
+                e.porcentaje_tiros, c.id_club
+             FROM tab_jugadores j
+             INNER JOIN tab_clubes c ON c.id_club = j.id_club
+             LEFT JOIN tab_jugador_estadisticas e ON e.id_jugador = j.id_jugador
+             WHERE c.ea_club_id = :ea_club_id AND j.gamertag = :gamertag
+             LIMIT 1'
+        );
+        $stmt->execute([
+            ':ea_club_id' => $eaClubId,
+            ':gamertag' => $gamertag,
+        ]);
+        $player = $stmt->fetch();
+        if ($player === false) {
+            return null;
+        }
+
+        $matchStmt = $pdo->prepare(
+            'SELECT
+                p.match_id, p.timestamp_ea, p.jugado_en, p.tipo,
+                p.rival_club_id, p.rival_nombre, p.goles_favor,
+                p.goles_contra, p.resultado, rival.crest_asset_id,
+                pj.posicion, pj.rating, pj.goles, pj.asistencias,
+                pj.tiros, pj.pases_intentados, pj.pases_completados,
+                pj.tackles_intentados, pj.tackles_completados,
+                pj.atajadas, pj.tarjetas_rojas, pj.man_of_the_match
+             FROM tab_partido_jugadores pj
+             INNER JOIN tab_partidos p ON p.id_partido = pj.id_partido
+             LEFT JOIN tab_clubes rival ON rival.ea_club_id = p.rival_club_id
+             WHERE pj.id_jugador = :id_jugador
+             ORDER BY p.timestamp_ea DESC
+             LIMIT 100'
+        );
+        $matchStmt->execute([':id_jugador' => (int) $player['id_jugador']]);
+        $matches = array_map(
+            static fn (array $row): array => [
+                'matchId' => (string) $row['match_id'],
+                'timestamp' => (int) $row['timestamp_ea'],
+                'playedAt' => $row['jugado_en'],
+                'type' => $row['tipo'],
+                'rivalClubId' => (string) $row['rival_club_id'],
+                'rivalName' => $row['rival_nombre'],
+                'rivalCrestAssetId' => $row['crest_asset_id'],
+                'goalsFor' => (int) $row['goles_favor'],
+                'goalsAgainst' => (int) $row['goles_contra'],
+                'result' => $row['resultado'],
+                'position' => $row['posicion'],
+                'rating' => $row['rating'] === null ? null : (float) $row['rating'],
+                'goals' => (int) $row['goles'],
+                'assists' => (int) $row['asistencias'],
+                'shots' => (int) $row['tiros'],
+                'passAttempts' => (int) $row['pases_intentados'],
+                'passesCompleted' => (int) $row['pases_completados'],
+                'tackleAttempts' => (int) $row['tackles_intentados'],
+                'tacklesCompleted' => (int) $row['tackles_completados'],
+                'saves' => (int) $row['atajadas'],
+                'redCards' => (int) $row['tarjetas_rojas'],
+                'manOfTheMatch' => (bool) $row['man_of_the_match'],
+            ],
+            $matchStmt->fetchAll()
+        );
+
+        $ratedMatches = array_values(array_filter(
+            $matches,
+            static fn (array $match): bool => $match['rating'] !== null
+        ));
+        $lastFive = array_slice($ratedMatches, 0, 5);
+        $recentRating = $lastFive === []
+            ? null
+            : round(array_sum(array_column($lastFive, 'rating')) / count($lastFive), 2);
+
+        $bestMatch = null;
+        foreach ($matches as $match) {
+            if (
+                $match['rating'] !== null
+                && ($bestMatch === null || $match['rating'] > $bestMatch['rating'])
+            ) {
+                $bestMatch = $match;
+            }
+        }
+
+        $gamesPlayed = (int) ($player['partidos_jugados'] ?? 0);
+        $clubDbId = (int) $player['id_club'];
+
+        return [
+            'id' => (int) $player['id_jugador'],
+            'eaPlayerId' => $player['ea_player_id'],
+            'gamertag' => $player['gamertag'],
+            'proName' => $player['pro_name'],
+            'favoritePosition' => $player['favorite_position'],
+            'proPosition' => $player['pro_position'],
+            'nationalityId' => self::nullableInt($player['nacionalidad_id']),
+            'heightCm' => self::nullableInt($player['altura_cm']),
+            'overall' => self::nullableInt($player['overall']),
+            'photoUrl' => $player['foto_url'],
+            'photoPath' => $player['foto_path'],
+            'active' => (bool) $player['activo'],
+            'stats' => [
+                'gamesPlayed' => $gamesPlayed,
+                'winRate' => (float) ($player['win_rate'] ?? 0),
+                'goals' => (int) ($player['goles'] ?? 0),
+                'assists' => (int) ($player['asistencias'] ?? 0),
+                'rating' => $player['rating_promedio'] === null
+                    ? null
+                    : (float) $player['rating_promedio'],
+                'manOfTheMatch' => (int) ($player['man_of_the_match'] ?? 0),
+                'redCards' => (int) ($player['tarjetas_rojas'] ?? 0),
+                'cleanSheetsDef' => (int) ($player['porterias_defensa'] ?? 0),
+                'cleanSheetsGk' => (int) ($player['porterias_portero'] ?? 0),
+                'passesCompleted' => (int) ($player['pases_completados'] ?? 0),
+                'passSuccessRate' => (float) ($player['porcentaje_pases'] ?? 0),
+                'tacklesCompleted' => (int) ($player['tackles_completados'] ?? 0),
+                'tackleSuccessRate' => (float) ($player['porcentaje_tackles'] ?? 0),
+                'shotSuccessRate' => (float) ($player['porcentaje_tiros'] ?? 0),
+                'goalsPerGame' => $gamesPlayed > 0
+                    ? round((int) $player['goles'] / $gamesPlayed, 2)
+                    : 0,
+                'assistsPerGame' => $gamesPlayed > 0
+                    ? round((int) $player['asistencias'] / $gamesPlayed, 2)
+                    : 0,
+            ],
+            'form' => [
+                'recentRating' => $recentRating,
+                'bestMatch' => $bestMatch,
+                'lastFiveRatings' => array_column($lastFive, 'rating'),
+            ],
+            'rankings' => [
+                'goals' => self::ranking($pdo, $clubDbId, 'goles', (int) ($player['goles'] ?? 0)),
+                'assists' => self::ranking(
+                    $pdo,
+                    $clubDbId,
+                    'asistencias',
+                    (int) ($player['asistencias'] ?? 0)
+                ),
+                'rating' => self::ranking(
+                    $pdo,
+                    $clubDbId,
+                    'rating_promedio',
+                    (float) ($player['rating_promedio'] ?? 0)
+                ),
+            ],
+            'matches' => $matches,
+        ];
+    }
+
     /**
      * Devuelve la plantilla normalizada directamente desde MySQL.
      *
@@ -49,6 +232,7 @@ class Jugador
 
             $members[] = [
                 'name' => $row['gamertag'],
+                'slug' => self::slug((string) $row['gamertag']),
                 'proName' => $row['pro_name'],
                 'favoritePosition' => $position,
                 'proPos' => $row['pro_position'],
@@ -303,5 +487,37 @@ SQL;
         return function_exists('mb_substr')
             ? mb_substr($value, 0, $length)
             : substr($value, 0, $length);
+    }
+
+    private static function ranking(PDO $pdo, int $clubId, string $field, int|float $value): int
+    {
+        $allowed = ['goles', 'asistencias', 'rating_promedio'];
+        if (!in_array($field, $allowed, true)) {
+            return 0;
+        }
+
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*)
+             FROM tab_jugador_estadisticas e
+             INNER JOIN tab_jugadores j ON j.id_jugador = e.id_jugador
+             WHERE j.id_club = :id_club AND j.activo = 1 AND e.{$field} > :valor"
+        );
+        $stmt->execute([
+            ':id_club' => $clubId,
+            ':valor' => $value,
+        ]);
+
+        return (int) $stmt->fetchColumn() + 1;
+    }
+
+    private static function slug(string $value): string
+    {
+        $ascii = function_exists('iconv')
+            ? iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value)
+            : $value;
+        $ascii = $ascii === false ? $value : $ascii;
+        $slug = preg_replace('/[^A-Za-z0-9]+/', '-', $ascii) ?? $ascii;
+
+        return strtolower(trim($slug, '-'));
     }
 }

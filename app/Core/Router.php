@@ -52,9 +52,7 @@ class Router
             header('Content-Type: application/json; charset=utf-8');
         }
 
-        $handler = $this->routes[$metodo][$ruta]
-            ?? $this->routes['GET'][$ruta]
-            ?? null;
+        [$handler, $params] = $this->resolve($metodo, $ruta);
 
         if ($handler === null) {
             $this->notFound($ruta);
@@ -62,7 +60,7 @@ class Router
         }
 
         try {
-            $result = $this->callHandler($handler);
+            $result = $this->callHandler($handler, $params);
         } catch (\Throwable $e) {
             error_log('Ruta ' . $ruta . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
             if (!$this->isApiRoute($ruta)) {
@@ -82,15 +80,55 @@ class Router
         }
     }
 
-    private function callHandler(callable|array $handler): mixed
+    private function callHandler(callable|array $handler, array $params = []): mixed
     {
         if (is_array($handler) && count($handler) === 2) {
             [$class, $method] = $handler;
             $instance = new $class();
-            return $instance->$method();
+            return $instance->$method(...array_values($params));
         }
 
-        return call_user_func($handler);
+        return call_user_func_array($handler, array_values($params));
+    }
+
+    /** @return array{0:callable|array|null,1:array<string,string>} */
+    private function resolve(string $method, string $route): array
+    {
+        $methods = $method === 'GET' ? ['GET'] : [$method, 'GET'];
+
+        foreach ($methods as $candidateMethod) {
+            if (isset($this->routes[$candidateMethod][$route])) {
+                return [$this->routes[$candidateMethod][$route], []];
+            }
+
+            foreach (($this->routes[$candidateMethod] ?? []) as $pattern => $handler) {
+                if (!str_contains($pattern, '{')) {
+                    continue;
+                }
+
+                $names = [];
+                $segments = explode('/', $pattern);
+                $regexSegments = array_map(
+                    static function (string $segment) use (&$names): string {
+                        if (preg_match('/^\{([A-Za-z_][A-Za-z0-9_]*)\}$/', $segment, $match)) {
+                            $names[] = $match[1];
+                            return '([^/]+)';
+                        }
+                        return preg_quote($segment, '#');
+                    },
+                    $segments
+                );
+
+                if (!preg_match('#^' . implode('/', $regexSegments) . '$#', $route, $matches)) {
+                    continue;
+                }
+
+                array_shift($matches);
+                return [$handler, array_combine($names, $matches) ?: []];
+            }
+        }
+
+        return [null, []];
     }
 
     private function notFound(string $ruta): void

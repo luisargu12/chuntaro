@@ -77,6 +77,10 @@ require __DIR__ . '/../layouts/public_header.php';
                     <div class="fc-loading">Cargando resultados desde EA Clubs…</div>
                 </div>
             </div>
+            <div class="d-flex justify-content-center mt-4">
+                    <a href="<?= htmlspecialchars(App::url('/fc-clubs/partidos')) ?>"
+                       class="btn fc-btn-secondary">Ver todos los partidos</a>
+                </div>
         </div>
     </section>
 

@@ -9,6 +9,7 @@ use App\Controllers\AuthController;
 use App\Controllers\PlantillaController;
 use App\Controllers\PartidosController;
 use App\Controllers\EaSyncController;
+use App\Controllers\JugadorController;
 
 App::load();
 
@@ -29,6 +30,7 @@ $router->view('home', 'public/inicio.php', protegida: false);
 $router->view('martes-botanero', 'public/proximamente.php', protegida: false);
 $router->view('fc-clubs', 'public/home.php', protegida: false);
 $router->get('fc-clubs/plantilla', [PlantillaController::class, 'index']);
+$router->get('fc-clubs/plantilla/{gamertag}', [JugadorController::class, 'show']);
 $router->get('fc-clubs/partidos', [PartidosController::class, 'index']);
 $router->get('fc-clubs/api/ea/members', [PlantillaController::class, 'membersApi']);
 $router->get('fc-clubs/api/ea/matches', [PartidosController::class, 'latest']);

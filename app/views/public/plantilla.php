@@ -43,7 +43,9 @@ require __DIR__ . '/../layouts/public_header.php';
         </section>
 
         <div id="plantillaStatus" class="roster-status">Cargando jugadores…</div>
-        <div id="playersGrid" class="row g-4"></div>
+        <div id="playersGrid"
+             class="row g-4"
+             data-profile-base="<?= htmlspecialchars(App::url('/fc-clubs/plantilla')) ?>"></div>
     </div>
 </main>
 
@@ -54,6 +56,7 @@ require __DIR__ . '/../layouts/public_header.php';
   const statusEl = document.getElementById('plantillaStatus');
   const gridEl = document.getElementById('playersGrid');
   const countsEl = document.getElementById('positionCounts');
+  const profileBase = String(gridEl.dataset.profileBase || '').replace(/\/+$/, '');
 
   const posLabel = (pos) => {
     const map = {
@@ -131,8 +134,15 @@ require __DIR__ . '/../layouts/public_header.php';
         const asist = j.assists ?? '0';
         const pj = j.gamesPlayed ?? '0';
         const mom = j.manOfTheMatch ?? '0';
-        const winRate = Number.parseFloat(j.winRate || 0);
         const overall = j.proOverall ?? '—';
+        const profileSlug = j.slug || encodeURIComponent(nombre);
+        const isForward = String(pos).toLowerCase() === 'forward';
+        const effectiveness = Number.parseFloat(
+          isForward ? j.shotSuccessRate || 0 : j.passSuccessRate || 0
+        );
+        const effectivenessLabel = isForward
+          ? 'Efectividad de tiros'
+          : 'Efectividad de pases';
 
         return `
           <div class="col-md-6 col-xl-4">
@@ -145,7 +155,7 @@ require __DIR__ . '/../layouts/public_header.php';
               <div class="roster-player-identity">
                 <div class="roster-avatar">${escapeHtml(initials(nombre))}</div>
                 <div class="flex-grow-1 min-w-0">
-                  <h3>${escapeHtml(nombre)}</h3>
+             <h3>${escapeHtml(nombre)}</h3>
                   <p>${proName ? escapeHtml(proName) : `Overall ${escapeHtml(overall)}`}</p>
                 </div>
                 <div class="roster-rating">
@@ -162,9 +172,18 @@ require __DIR__ . '/../layouts/public_header.php';
               </div>
 
               <div class="roster-win-rate">
-                <div><span>Win rate</span><strong>${escapeHtml(winRate)}%</strong></div>
-                <div class="roster-progress"><i style="width: ${Math.max(0, Math.min(winRate, 100))}%"></i></div>
+                <div>
+                  <span>${effectivenessLabel}</span>
+                  <strong>${escapeHtml(effectiveness)}%</strong>
+                </div>
+                <div class="roster-progress">
+                  <i style="width: ${Math.max(0, Math.min(effectiveness, 100))}%"></i>
+                </div>
               </div>
+              <a class="roster-profile-link"
+                 href="${escapeHtml(`${profileBase}/${profileSlug}`)}">
+                Ver perfil completo <span>↗</span>
+              </a>
             </article>
           </div>`;
       }).join('');
