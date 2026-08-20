@@ -12,18 +12,42 @@ $pageTitle = 'Plantilla';
 require __DIR__ . '/../layouts/public_header.php';
 ?>
 
-<section class="page-hero text-white d-flex align-items-end">
-    <div class="container position-relative z-2 pb-4">
-
-        <h1 class="titulo-banner mb-2" style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--color-primary)">Plantilla</h1>
-        <p id="clubNameLabel" class="mb-0 fs-5" style="color: var(--color-primary)"><?= htmlspecialchars($clubName) ?></p>
+<section class="roster-hero">
+    <div class="container position-relative">
+        <div class="row align-items-end g-4">
+            <div class="col-lg-8 position-relative z-2">
+                <a href="<?= htmlspecialchars(App::url('/fc-clubs')) ?>"
+                   class="roster-back-link">← FC Clubs</a>
+                <p class="fc-eyebrow mb-3">El vestidor virtual</p>
+                <h1 class="roster-title mb-3">Plantilla</h1>
+                <p id="clubNameLabel" class="roster-subtitle mb-0">
+                    <?= htmlspecialchars($clubName) ?> · EA FC 26
+                </p>
+            </div>
+            <div class="col-lg-4 d-none d-lg-flex justify-content-end">
+                <img src="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
+                     class="roster-hero-crest"
+                     alt=""
+                     aria-hidden="true">
+            </div>
+        </div>
     </div>
 </section>
 
-<main class="container py-5">
-    <div id="plantillaStatus" class="alert alert-secondary">Cargando jugadores…</div>
-    <div id="positionCounts" class="row g-3 mb-4 d-none"></div>
-    <div id="playersGrid" class="row g-4"></div>
+<main class="roster-page">
+    <div class="container">
+        <section class="roster-toolbar">
+            <div>
+                <p class="fc-eyebrow mb-2">Primer equipo</p>
+                <h2 class="roster-section-title mb-2">Conoce a los jugadores</h2>
+                <p class="text-muted mb-0">Filtra por posición y compara su rendimiento.</p>
+            </div>
+            <div id="positionCounts" class="roster-filters d-none"></div>
+        </section>
+
+        <div id="plantillaStatus" class="roster-status">Cargando jugadores…</div>
+        <div id="playersGrid" class="row g-4"></div>
+    </div>
 </main>
 
 <script>
@@ -54,12 +78,20 @@ require __DIR__ . '/../layouts/public_header.php';
     .replaceAll("'", '&#039;');
 
   const setStatus = (type, html) => {
-    statusEl.className = `alert alert-${type}`;
+    statusEl.className = `roster-status roster-status-${type}`;
     statusEl.innerHTML = html;
     statusEl.classList.remove('d-none');
   };
 
-  const renderPlayers = (data, meta = {}) => {
+  const initials = (name) => String(name || 'J')
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  const renderPlayers = (data) => {
     const members = Array.isArray(data.members) ? [...data.members] : [];
     const positionCount = data.positionCount || {};
 
@@ -71,57 +103,89 @@ require __DIR__ . '/../layouts/public_header.php';
     });
 
     const countMap = [
+      ['all', 'Todos', members.length],
       ['forward', 'Delanteros'],
       ['midfielder', 'Medios'],
       ['defender', 'Defensas'],
       ['goalkeeper', 'Porteros'],
     ];
 
-    countsEl.innerHTML = countMap.map(([key, label]) => `
-      <div class="col-6 col-md-3">
-        <div class="stat-card text-white text-center p-3" style="background: var(--color-primary);">
-          <div class="display-6 fw-bold text-accent">${parseInt(positionCount[key] || 0, 10)}</div>
-          <div class="small text-white-50">${label}</div>
-        </div>
-      </div>
+    countsEl.innerHTML = countMap.map(([key, label, total]) => `
+      <button type="button"
+              class="roster-filter${key === 'all' ? ' active' : ''}"
+              data-position="${key}">
+        <span>${escapeHtml(label)}</span>
+        <strong>${parseInt(total ?? positionCount[key] ?? 0, 10)}</strong>
+      </button>
     `).join('');
     countsEl.classList.remove('d-none');
 
-    gridEl.innerHTML = members.map((j) => {
-      const nombre = j.name || j.proName || 'Jugador';
-      const pos = j.favoritePosition || j.proPos || '';
-      const rating = j.ratingAve ?? '—';
-      const goles = j.goals ?? '0';
-      const asist = j.assists ?? '0';
-      const pj = j.gamesPlayed ?? '0';
-      const mom = j.manOfTheMatch ?? '0';
-      const winRate = j.winRate;
+    const renderGrid = (position = 'all') => {
+      const filtered = position === 'all'
+        ? members
+        : members.filter((member) => String(member.favoritePosition || '').toLowerCase() === position);
 
-      return `
-        <div class="col-md-6 col-lg-4">
-          <div class="card player-card h-100 border-0 shadow-sm">
-            <div class="card-body p-4">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h5 class="fw-bold mb-1">${escapeHtml(nombre)}</h5>
-                  <span class="badge rounded-pill" style="background: var(--color-primary);">${escapeHtml(posLabel(pos))}</span>
+      gridEl.innerHTML = filtered.map((j, index) => {
+        const nombre = j.name || j.proName || 'Jugador';
+        const proName = j.proName && j.proName !== nombre ? j.proName : '';
+        const pos = j.favoritePosition || j.proPos || '';
+        const rating = j.ratingAve ?? '—';
+        const goles = j.goals ?? '0';
+        const asist = j.assists ?? '0';
+        const pj = j.gamesPlayed ?? '0';
+        const mom = j.manOfTheMatch ?? '0';
+        const winRate = Number.parseFloat(j.winRate || 0);
+        const overall = j.proOverall ?? '—';
+
+        return `
+          <div class="col-md-6 col-xl-4">
+            <article class="roster-player-card">
+              <div class="roster-player-top">
+                <span class="roster-card-number">${String(index + 1).padStart(2, '0')}</span>
+                <span class="roster-position">${escapeHtml(posLabel(pos))}</span>
+              </div>
+
+              <div class="roster-player-identity">
+                <div class="roster-avatar">${escapeHtml(initials(nombre))}</div>
+                <div class="flex-grow-1 min-w-0">
+                  <h3>${escapeHtml(nombre)}</h3>
+                  <p>${proName ? escapeHtml(proName) : `Overall ${escapeHtml(overall)}`}</p>
                 </div>
-                <div class="text-end">
-                  <div class="fs-3 fw-bold text-accent lh-1">${escapeHtml(rating)}</div>
-                  <small class="text-muted">Rating</small>
+                <div class="roster-rating">
+                  <strong>${escapeHtml(rating)}</strong>
+                  <span>Rating</span>
                 </div>
               </div>
-              <div class="row text-center g-2">
-                <div class="col-3"><div class="fw-bold">${escapeHtml(pj)}</div><small class="text-muted">PJ</small></div>
-                <div class="col-3"><div class="fw-bold">${escapeHtml(goles)}</div><small class="text-muted">Goles</small></div>
-                <div class="col-3"><div class="fw-bold">${escapeHtml(asist)}</div><small class="text-muted">Asist.</small></div>
-                <div class="col-3"><div class="fw-bold">${escapeHtml(mom)}</div><small class="text-muted">MOTM</small></div>
+
+              <div class="roster-stat-grid">
+                <div><strong>${escapeHtml(pj)}</strong><span>Partidos</span></div>
+                <div><strong>${escapeHtml(goles)}</strong><span>Goles</span></div>
+                <div><strong>${escapeHtml(asist)}</strong><span>Asistencias</span></div>
+                <div><strong>${escapeHtml(mom)}</strong><span>MOTM</span></div>
               </div>
-              ${winRate != null && winRate !== '' ? `<div class="mt-3 small text-muted">Win rate: ${escapeHtml(winRate)}%</div>` : ''}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+
+              <div class="roster-win-rate">
+                <div><span>Win rate</span><strong>${escapeHtml(winRate)}%</strong></div>
+                <div class="roster-progress"><i style="width: ${Math.max(0, Math.min(winRate, 100))}%"></i></div>
+              </div>
+            </article>
+          </div>`;
+      }).join('');
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = '<div class="col-12"><div class="roster-empty">No hay jugadores en esta posición.</div></div>';
+      }
+    };
+
+    countsEl.querySelectorAll('.roster-filter').forEach((button) => {
+      button.addEventListener('click', () => {
+        countsEl.querySelectorAll('.roster-filter').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        renderGrid(button.dataset.position || 'all');
+      });
+    });
+
+    renderGrid();
 
     if (members.length === 0) {
       setStatus('info', 'No hay jugadores activos guardados.');
@@ -129,7 +193,6 @@ require __DIR__ . '/../layouts/public_header.php';
     }
 
     let note = `Se cargaron <strong>${members.length}</strong> jugadores.`;
-    if (meta.cached) note += ' (caché servidor)';
     setStatus('success', note);
   };
 
@@ -153,7 +216,7 @@ require __DIR__ . '/../layouts/public_header.php';
         throw new Error(json.mensaje || `HTTP ${res.status}`);
       }
 
-      renderPlayers(json.data, { cached: !!json.cached });
+      renderPlayers(json.data);
     } catch (err) {
       console.error(err);
       setStatus(

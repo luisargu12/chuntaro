@@ -87,7 +87,6 @@ require __DIR__ . '/../layouts/public_header.php';
                     <p class="fc-eyebrow mb-2">Explora el club</p>
                     <h2 class="fc-display mb-0">Más que un marcador</h2>
                 </div>
-                <span class="fc-section-number" aria-hidden="true">02</span>
             </div>
 
             <div class="row g-4">

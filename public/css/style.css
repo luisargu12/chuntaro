@@ -564,3 +564,349 @@ body {
     min-height: 300px;
   }
 }
+
+/* Plantilla FC Clubs */
+.roster-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 11rem 0 5.5rem;
+  background:
+    radial-gradient(circle at 82% 35%, rgba(229, 178, 93, 0.16), transparent 25rem),
+    linear-gradient(135deg, #1d1715 0%, #51241f 100%);
+  color: #fff;
+}
+
+.roster-hero::after {
+  content: "CHUNTARO";
+  position: absolute;
+  right: -1rem;
+  bottom: -2.5rem;
+  color: rgba(255, 255, 255, 0.025);
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(6rem, 16vw, 13rem);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.roster-hero .fc-eyebrow {
+  color: var(--color-accent);
+}
+
+.roster-back-link {
+  display: inline-block;
+  margin-bottom: 2.5rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.roster-back-link:hover {
+  color: var(--color-accent);
+}
+
+.roster-title {
+  color: #f4ebdd;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(3.75rem, 10vw, 8rem);
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+.roster-subtitle {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 1.05rem;
+}
+
+.roster-hero-crest {
+  position: relative;
+  z-index: 1;
+  width: min(230px, 70%);
+  max-height: 230px;
+  object-fit: contain;
+  opacity: 0.92;
+  filter: drop-shadow(0 20px 25px rgba(0, 0, 0, 0.35));
+}
+
+.roster-page {
+  min-height: 60vh;
+  padding: clamp(4rem, 8vw, 7rem) 0;
+  background: #f4f0e9;
+}
+
+.roster-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 2.25rem;
+  border-bottom: 1px solid #d9d0c6;
+}
+
+.roster-section-title {
+  color: #251b19;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+}
+
+.roster-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.roster-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: transparent;
+  border: 1px solid #cfc4b8;
+  color: #6e625f;
+  font-size: 0.76rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.roster-filter strong {
+  min-width: 1.5rem;
+  padding: 0.12rem 0.35rem;
+  background: #e5ddd4;
+  color: #51241f;
+  text-align: center;
+}
+
+.roster-filter:hover,
+.roster-filter.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.roster-filter.active strong {
+  background: var(--color-accent);
+  color: #251b19;
+}
+
+.roster-status {
+  margin-bottom: 1.5rem;
+  color: #756965;
+  font-size: 0.8rem;
+}
+
+.roster-status-success {
+  color: #467456;
+}
+
+.roster-status-danger {
+  padding: 1rem 1.25rem;
+  background: #f4dddd;
+  color: #8c3434;
+}
+
+.roster-player-card {
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  border-top: 4px solid var(--color-primary);
+  box-shadow: 0 10px 28px rgba(57, 39, 34, 0.07);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.roster-player-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 38px rgba(57, 39, 34, 0.13);
+}
+
+.roster-player-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid #eee8e2;
+}
+
+.roster-card-number {
+  color: #b5aaa4;
+  font-family: "Black Ops One", sans-serif;
+  font-size: 0.85rem;
+}
+
+.roster-position {
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.roster-player-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1.25rem;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.roster-avatar {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  flex: 0 0 56px;
+  place-items: center;
+  background: #51241f;
+  color: var(--color-accent);
+  font-family: "Black Ops One", sans-serif;
+  font-size: 1.1rem;
+}
+
+.roster-player-identity h3 {
+  overflow: hidden;
+  margin: 0 0 0.25rem;
+  color: #251b19;
+  font-family: "Black Ops One", sans-serif;
+  font-size: 1.15rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-player-identity p {
+  overflow: hidden;
+  margin: 0;
+  color: #948783;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-rating {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.roster-rating strong {
+  color: var(--color-primary);
+  font-family: "Black Ops One", sans-serif;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.roster-rating span {
+  margin-top: 0.25rem;
+  color: #a09490;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.roster-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid #eee8e2;
+  border-bottom: 1px solid #eee8e2;
+}
+
+.roster-stat-grid > div {
+  padding: 1rem 0.35rem;
+  border-right: 1px solid #eee8e2;
+  text-align: center;
+}
+
+.roster-stat-grid > div:last-child {
+  border-right: 0;
+}
+
+.roster-stat-grid strong,
+.roster-stat-grid span {
+  display: block;
+}
+
+.roster-stat-grid strong {
+  color: #342927;
+  font-size: 1rem;
+}
+
+.roster-stat-grid span {
+  margin-top: 0.15rem;
+  color: #9b8e89;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.roster-win-rate {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.roster-win-rate > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+  color: #8b7e79;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.roster-win-rate strong {
+  color: var(--color-primary);
+}
+
+.roster-progress {
+  height: 4px;
+  overflow: hidden;
+  background: #e8e0d8;
+}
+
+.roster-progress i {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.roster-empty {
+  padding: 3rem;
+  border: 1px solid #d9d0c6;
+  color: #80736e;
+  text-align: center;
+}
+
+@media (max-width: 991.98px) {
+  .roster-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .roster-filters {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .roster-hero {
+    padding: 9rem 0 4rem;
+  }
+
+  .roster-title {
+    font-size: 3.25rem;
+  }
+
+  .roster-filters {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .roster-filter {
+    justify-content: space-between;
+  }
+}
