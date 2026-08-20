@@ -73,6 +73,159 @@ class Partido
     }
 
     /**
+     * Historial de partidos para la vista pública, ordenado del más reciente.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public static function historyForPublic(string $principalClubId, int $limit = 200): array
+    {
+        $limit = max(1, min($limit, 500));
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT
+                p.match_id, p.timestamp_ea, p.jugado_en, p.tipo,
+                p.club_id, p.rival_club_id, p.rival_nombre,
+                p.goles_favor, p.goles_contra, p.resultado,
+                principal.nombre AS principal_nombre,
+                principal.crest_asset_id AS principal_crest_asset_id,
+                rival.nombre AS rival_nombre_catalogo,
+                rival.crest_asset_id AS rival_crest_asset_id
+             FROM tab_partidos p
+             LEFT JOIN tab_clubes principal ON principal.ea_club_id = p.club_id
+             LEFT JOIN tab_clubes rival ON rival.ea_club_id = p.rival_club_id
+             WHERE p.club_id = :club_id
+             ORDER BY p.timestamp_ea DESC
+             LIMIT :limite'
+        );
+        $stmt->bindValue(':club_id', $principalClubId);
+        $stmt->bindValue(':limite', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $matches = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $matches[] = self::publicMatchFromRow($row);
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Estadísticas generales e individuales de un partido.
+     *
+     * @return array<string,mixed>|null
+     */
+    public static function detailForPublic(string $matchId, string $principalClubId): ?array
+    {
+        $pdo = Database::conectar();
+        $matchStmt = $pdo->prepare(
+            'SELECT id_partido, match_id, jugado_en, tipo, club_id,
+                    rival_club_id, rival_nombre, goles_favor, goles_contra,
+                    resultado
+             FROM tab_partidos
+             WHERE match_id = :match_id AND club_id = :club_id
+             LIMIT 1'
+        );
+        $matchStmt->execute([
+            ':match_id' => $matchId,
+            ':club_id' => $principalClubId,
+        ]);
+        $match = $matchStmt->fetch();
+        if ($match === false) {
+            return null;
+        }
+
+        $teamStmt = $pdo->prepare(
+            'SELECT
+                e.ea_club_id, e.es_principal, e.jugadores_contados,
+                e.goles, e.asistencias, e.tiros, e.pases_intentados,
+                e.pases_completados, e.tackles_intentados,
+                e.tackles_completados, e.atajadas, e.tarjetas_rojas,
+                e.porterias_cero, e.man_of_the_match, e.rating_promedio,
+                e.segundos_jugados, c.nombre, c.crest_asset_id
+             FROM tab_partido_estadisticas e
+             LEFT JOIN tab_clubes c ON c.id_club = e.id_club
+             WHERE e.id_partido = :id_partido
+             ORDER BY e.es_principal DESC'
+        );
+        $teamStmt->execute([':id_partido' => (int) $match['id_partido']]);
+
+        $playerStmt = $pdo->prepare(
+            'SELECT
+                pj.ea_player_id, pj.gamertag, pj.posicion, pj.rating,
+                pj.goles, pj.asistencias, pj.tiros, pj.pases_intentados,
+                pj.pases_completados, pj.tackles_intentados,
+                pj.tackles_completados, pj.atajadas, pj.tarjetas_rojas,
+                pj.man_of_the_match, j.pro_name, j.favorite_position
+             FROM tab_partido_jugadores pj
+             LEFT JOIN tab_jugadores j ON j.id_jugador = pj.id_jugador
+             WHERE pj.id_partido = :id_partido
+             ORDER BY pj.rating DESC, pj.goles DESC, pj.gamertag ASC'
+        );
+        $playerStmt->execute([':id_partido' => (int) $match['id_partido']]);
+
+        return [
+            'match' => [
+                'matchId' => (string) $match['match_id'],
+                'playedAt' => $match['jugado_en'],
+                'type' => $match['tipo'],
+                'result' => $match['resultado'],
+                'clubId' => (string) $match['club_id'],
+                'rivalClubId' => (string) $match['rival_club_id'],
+                'rivalName' => $match['rival_nombre'],
+                'goalsFor' => (int) $match['goles_favor'],
+                'goalsAgainst' => (int) $match['goles_contra'],
+            ],
+            'teams' => array_map(
+                static fn (array $row): array => [
+                    'clubId' => (string) $row['ea_club_id'],
+                    'name' => $row['nombre'] ?: (
+                        (int) $row['es_principal'] === 1
+                            ? 'Chuntaro FC'
+                            : $match['rival_nombre']
+                    ),
+                    'crestAssetId' => $row['crest_asset_id'],
+                    'isPrincipal' => (bool) $row['es_principal'],
+                    'players' => (int) $row['jugadores_contados'],
+                    'goals' => (int) $row['goles'],
+                    'assists' => (int) $row['asistencias'],
+                    'shots' => (int) $row['tiros'],
+                    'passAttempts' => (int) $row['pases_intentados'],
+                    'passesCompleted' => (int) $row['pases_completados'],
+                    'tackleAttempts' => (int) $row['tackles_intentados'],
+                    'tacklesCompleted' => (int) $row['tackles_completados'],
+                    'saves' => (int) $row['atajadas'],
+                    'redCards' => (int) $row['tarjetas_rojas'],
+                    'cleanSheets' => (int) $row['porterias_cero'],
+                    'rating' => $row['rating_promedio'] === null
+                        ? null
+                        : (float) $row['rating_promedio'],
+                ],
+                $teamStmt->fetchAll()
+            ),
+            'players' => array_map(
+                static fn (array $row): array => [
+                    'playerId' => $row['ea_player_id'],
+                    'gamertag' => $row['gamertag'],
+                    'proName' => $row['pro_name'],
+                    'position' => $row['posicion'] ?: $row['favorite_position'],
+                    'rating' => $row['rating'] === null ? null : (float) $row['rating'],
+                    'goals' => (int) $row['goles'],
+                    'assists' => (int) $row['asistencias'],
+                    'shots' => (int) $row['tiros'],
+                    'passAttempts' => (int) $row['pases_intentados'],
+                    'passesCompleted' => (int) $row['pases_completados'],
+                    'tackleAttempts' => (int) $row['tackles_intentados'],
+                    'tacklesCompleted' => (int) $row['tackles_completados'],
+                    'saves' => (int) $row['atajadas'],
+                    'redCards' => (int) $row['tarjetas_rojas'],
+                    'manOfTheMatch' => (bool) $row['man_of_the_match'],
+                ],
+                $playerStmt->fetchAll()
+            ),
+        ];
+    }
+
+    /**
      * Inserta o actualiza una lista de partidos de EA.
      *
      * @return array{insertados:int,actualizados:int,sin_cambios:int,omitidos:int}
@@ -297,6 +450,33 @@ SQL;
                 'customKit' => [
                     'crestAssetId' => $crestAssetId,
                 ],
+            ],
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private static function publicMatchFromRow(array $row): array
+    {
+        $ownClubId = (string) $row['club_id'];
+        $rivalClubId = (string) $row['rival_club_id'];
+
+        return [
+            'matchId' => (string) $row['match_id'],
+            'timestamp' => (int) $row['timestamp_ea'],
+            'playedAt' => $row['jugado_en'],
+            'type' => $row['tipo'],
+            'result' => $row['resultado'],
+            'clubs' => [
+                $ownClubId => self::publicClub(
+                    (string) ($row['principal_nombre'] ?: 'Chuntaro FC'),
+                    (int) $row['goles_favor'],
+                    $row['principal_crest_asset_id']
+                ),
+                $rivalClubId => self::publicClub(
+                    (string) ($row['rival_nombre_catalogo'] ?: $row['rival_nombre']),
+                    (int) $row['goles_contra'],
+                    $row['rival_crest_asset_id']
+                ),
             ],
         ];
     }

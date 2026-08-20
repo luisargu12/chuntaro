@@ -103,14 +103,16 @@ require __DIR__ . '/../layouts/public_header.php';
                     </a>
                 </div>
                 <div class="col-lg-5">
-                    <div class="fc-feature-card fc-feature-card-muted">
+                    <a href="<?= htmlspecialchars(App::url('/fc-clubs/partidos')) ?>"
+                       class="fc-feature-card fc-feature-card-muted">
                         <span class="fc-feature-index">02</span>
                         <div>
-                            <p class="fc-card-kicker mb-2">Próximamente</p>
-                            <h3>Centro de estadísticas</h3>
-                            <p>Historial, comparativas, rankings y detalle de cada partido.</p>
+                            <p class="fc-card-kicker mb-2">Partidos</p>
+                            <h3>Historial completo</h3>
+                            <p>Resultados por mes, comparativas y rendimiento individual.</p>
                         </div>
-                    </div>
+                        <span class="fc-feature-arrow" aria-hidden="true">↗</span>
+                    </a>
                 </div>
             </div>
         </div>
