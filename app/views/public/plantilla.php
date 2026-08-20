@@ -25,10 +25,7 @@ require __DIR__ . '/../layouts/public_header.php';
                 </p>
             </div>
             <div class="col-lg-4 d-none d-lg-flex justify-content-end">
-                <img src="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
-                     class="roster-hero-crest"
-                     alt=""
-                     aria-hidden="true">
+
             </div>
         </div>
     </div>
