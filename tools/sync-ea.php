@@ -46,6 +46,14 @@ $requests = [
         'platform' => $platform,
         'clubIds' => $clubId,
     ]),
+    'overallStats' => $eaBase . 'clubs/overallStats?' . http_build_query([
+        'platform' => $platform,
+        'clubIds' => $clubId,
+    ]),
+    'playoffAchievements' => $eaBase . 'club/playoffAchievements?' . http_build_query([
+        'platform' => $platform,
+        'clubId' => $clubId,
+    ]),
 ];
 
 foreach (['leagueMatch', 'playoffMatch', 'friendlyMatch'] as $type) {
@@ -97,6 +105,8 @@ try {
     $localImport = (new EaClubsApi())->importSyncedData($resources, $matchLimit);
     $localWarnings = array_values(array_filter([
         $localImport['clubesWarning'] ?? null,
+        $localImport['clubEstadisticasWarning'] ?? null,
+        $localImport['logrosPlayoffWarning'] ?? null,
         $localImport['jugadoresWarning'] ?? null,
         $localImport['partidosWarning'] ?? null,
         $localImport['partidoJugadoresWarning'] ?? null,

@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Config\App;
 use App\Models\Club;
+use App\Models\ClubEstadistica;
 use App\Models\Jugador;
 use App\Models\Partido;
 use App\Models\PartidoEstadistica;
@@ -63,6 +64,51 @@ class EaClubsApi
                 error_log('EA sync clubs: ' . $e->getMessage());
                 $clubWarning = 'La información de clubes se cacheó, pero no pudo guardarse en la base de datos: '
                     . $e->getMessage();
+            }
+        }
+
+        $clubOverallStats = ['guardados' => 0, 'omitidos' => 0];
+        $clubOverallWarning = null;
+        if (isset($resources['overallStats']) && is_array($resources['overallStats'])) {
+            $this->writeCache(
+                'club_overall_stats_' . $this->clubId() . '_' . $this->platform(),
+                $resources['overallStats']
+            );
+            $stored[] = 'overallStats';
+
+            try {
+                $clubOverallStats = ClubEstadistica::upsertOverallStats(
+                    $resources['overallStats'],
+                    $this->clubId()
+                );
+            } catch (\Throwable $e) {
+                error_log('EA sync overall club stats: ' . $e->getMessage());
+                $clubOverallWarning = 'Las estadísticas históricas del club se cachearon, '
+                    . 'pero no pudieron guardarse: ' . $e->getMessage();
+            }
+        }
+
+        $playoffStats = ['guardados' => 0, 'omitidos' => 0];
+        $playoffWarning = null;
+        if (
+            isset($resources['playoffAchievements'])
+            && is_array($resources['playoffAchievements'])
+        ) {
+            $this->writeCache(
+                'club_playoff_achievements_' . $this->clubId() . '_' . $this->platform(),
+                $resources['playoffAchievements']
+            );
+            $stored[] = 'playoffAchievements';
+
+            try {
+                $playoffStats = ClubEstadistica::upsertPlayoffAchievements(
+                    $resources['playoffAchievements'],
+                    $this->clubId()
+                );
+            } catch (\Throwable $e) {
+                error_log('EA sync playoff achievements: ' . $e->getMessage());
+                $playoffWarning = 'Los logros de playoffs se cachearon, '
+                    . 'pero no pudieron guardarse: ' . $e->getMessage();
             }
         }
 
@@ -162,6 +208,10 @@ class EaClubsApi
             'recursos' => $stored,
             'clubes' => $clubStats,
             'clubesWarning' => $clubWarning,
+            'clubEstadisticas' => $clubOverallStats,
+            'clubEstadisticasWarning' => $clubOverallWarning,
+            'logrosPlayoff' => $playoffStats,
+            'logrosPlayoffWarning' => $playoffWarning,
             'jugadores' => $jugadorStats,
             'jugadoresWarning' => $jugadorWarning,
             'partidos' => Partido::mergeStats($partidoReports),

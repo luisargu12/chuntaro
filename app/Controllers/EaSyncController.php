@@ -63,6 +63,8 @@ class EaSyncController
             'mensaje' => 'Datos de EA sincronizados',
             'recursos' => $stored,
             'clubes' => $imported['clubes'] ?? null,
+            'clubEstadisticas' => $imported['clubEstadisticas'] ?? null,
+            'logrosPlayoff' => $imported['logrosPlayoff'] ?? null,
             'jugadores' => $imported['jugadores'] ?? null,
             'partidos' => $imported['partidos'] ?? null,
             'partidoJugadores' => $imported['partidoJugadores'] ?? null,
@@ -72,6 +74,8 @@ class EaSyncController
 
         $warnings = array_values(array_filter([
             $imported['clubesWarning'] ?? null,
+            $imported['clubEstadisticasWarning'] ?? null,
+            $imported['logrosPlayoffWarning'] ?? null,
             $imported['jugadoresWarning'] ?? null,
             $imported['partidosWarning'] ?? null,
             $imported['partidoJugadoresWarning'] ?? null,
