@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ownTeam = teams.find((team) => team.isPrincipal) || null;
     const rivalTeam = teams.find((team) => !team.isPrincipal) || null;
     const rivalName = rivalTeam?.name || match.rivalName || "Equipo rival";
-    modalTitle.textContent = `Chuntaro FC ${match.goalsFor ?? 0} : ${match.goalsAgainst ?? 0} ${rivalName}`;
+    modalTitle.textContent = "Estadísticas del partido";
 
     const rows = [
       ["Tiros", "shots"],
@@ -205,22 +205,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const comparison = teams.length > 0
       ? `
         <section class="match-comparison">
-          <div class="match-comparison-team">
-            <img src="${escapeHtml(crestUrl(ownTeam, true))}" alt="">
-            <strong>Chuntaro FC</strong>
+          <div class="match-detail-scoreboard">
+            <div>
+              <img src="${escapeHtml(crestUrl(ownTeam, true))}" alt="">
+              <strong>Chuntaro FC</strong>
+            </div>
+            <span>${match.goalsFor ?? 0}<i>:</i>${match.goalsAgainst ?? 0}</span>
+            <div>
+              <img src="${escapeHtml(crestUrl(rivalTeam))}" alt="">
+              <strong>${escapeHtml(rivalName)}</strong>
+            </div>
           </div>
-          <div class="match-comparison-rows">
-            ${rows.map(([label, key, attemptedKey]) => `
-              <div>
-                <strong>${escapeHtml(comparisonValue(ownTeam, key, attemptedKey))}</strong>
-                <span>${escapeHtml(label)}</span>
-                <strong>${escapeHtml(comparisonValue(rivalTeam, key, attemptedKey))}</strong>
-              </div>
-            `).join("")}
-          </div>
-          <div class="match-comparison-team">
-            <img src="${escapeHtml(crestUrl(rivalTeam))}" alt="">
-            <strong>${escapeHtml(rivalName)}</strong>
+          <div class="match-comparison-grid">
+            <div class="match-comparison-rows">
+              ${rows.map(([label, key, attemptedKey]) => `
+                <div>
+                  <strong>${escapeHtml(comparisonValue(ownTeam, key, attemptedKey))}</strong>
+                  <span>${escapeHtml(label)}</span>
+                  <strong>${escapeHtml(comparisonValue(rivalTeam, key, attemptedKey))}</strong>
+                </div>
+              `).join("")}
+            </div>
           </div>
         </section>`
       : '<div class="match-detail-empty">Este partido aún no tiene estadísticas generales sincronizadas.</div>';
