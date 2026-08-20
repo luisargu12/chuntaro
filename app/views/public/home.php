@@ -6,7 +6,7 @@ require __DIR__ . '/../layouts/public_header.php';
 ?>
 
 <header class="hero-section d-flex align-items-end justify-content-start text-start pb-5"
-        style="--hero-image: url('<?= htmlspecialchars(App::asset('img/hero.jpg')) ?>')">
+        style="--hero-image: url('<?= htmlspecialchars(App::asset('img/hero-clubs.jpg')) ?>')">
     <div class="hero-bg"></div>
     <div class="hero-overlay"></div>
     <div class="container position-relative z-2">
@@ -22,11 +22,11 @@ require __DIR__ . '/../layouts/public_header.php';
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-7">
-                    <p class="fc-eyebrow mb-3">EA Sports FC 26 · Pro Clubs</p>
-                    <h2 class="fc-display mb-4">El vestidor también existe en línea.</h2>
+                    <p class="fc-eyebrow mb-3">EA FC 26 · Pro Clubs</p>
+                    <h2 class="fc-display mb-4">Los alergicos a la primera división.</h2>
                     <p class="fc-lead mb-4">
                         Sigue cada resultado, conoce a la plantilla y revisa el rendimiento
-                        de Chuntaro FC en su camino por la liga virtual.
+                        de Chuntaro FC en su camino por la liga EA FC 26.
                     </p>
                     <div class="d-flex flex-wrap gap-3">
                         <a href="<?= htmlspecialchars(App::url('/fc-clubs/plantilla')) ?>"
@@ -37,7 +37,7 @@ require __DIR__ . '/../layouts/public_header.php';
 
                 <div class="col-lg-5">
                     <article class="fc-identity-card">
-                        <span class="fc-live-badge"><i></i> Datos sincronizados</span>
+                        <span class="fc-live-badge"><i></i></span>
                         <img src="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
                              alt="Escudo de Chuntaro FC"
                              class="fc-identity-crest">
@@ -59,7 +59,6 @@ require __DIR__ . '/../layouts/public_header.php';
                     <p class="fc-eyebrow mb-2">Jornada reciente</p>
                     <h2 class="fc-display fc-display-light mb-0">Últimos partidos</h2>
                 </div>
-                <span class="fc-section-number" aria-hidden="true">01</span>
             </div>
 
             <div

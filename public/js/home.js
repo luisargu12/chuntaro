@@ -46,7 +46,7 @@
     tick();
   }
 
-  // Últimos partidos desde el proxy/cache de EA Clubs
+  // Últimos partidos almacenados en MySQL
   const matchesEl = document.getElementById("recentMatches");
   if (matchesEl) {
     const endpoint = matchesEl.dataset.endpoint;
@@ -200,7 +200,7 @@
         matchesEl.innerHTML = `
           <div class="col-12">
             <div class="alert alert-warning text-center">
-              No se pudieron cargar los partidos desde EA Clubs:
+              No se pudieron cargar los partidos guardados:
               ${escapeHtml(error.message || error)}
             </div>
           </div>`;

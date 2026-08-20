@@ -1,33 +1,22 @@
 <?php
 namespace App\Controllers;
 
-use App\Services\EaClubsApi;
+use App\Config\App;
+use App\Models\Partido;
 
 class PartidosController
 {
     public function latest(): array
     {
         $type = (string) ($_GET['type'] ?? 'leagueMatch');
-        $limit = (int) ($_GET['limit'] ?? 3);
-
-        $api = new EaClubsApi();
-        $result = $api->matches($type, $limit);
-
-        if (!($result['ok'] ?? false)) {
-            http_response_code((int) ($result['status'] ?? 502));
-            return [
-                'exito' => false,
-                'mensaje' => $result['error'] ?? 'No se pudieron consultar los partidos',
-            ];
-        }
+        $limit = max(1, min((int) ($_GET['limit'] ?? 3), 20));
+        $clubId = (string) App::env('EA_CLUB_ID', '2043111');
 
         return [
             'exito' => true,
-            'clubId' => $api->clubId(),
-            'cached' => !empty($result['cached']),
-            'stale' => !empty($result['stale']),
-            'warning' => $result['warning'] ?? null,
-            'data' => $result['data'],
+            'clubId' => $clubId,
+            'source' => 'database',
+            'data' => Partido::latestForPublic($type, $limit, $clubId),
         ];
     }
 }

@@ -8,6 +8,71 @@ class Partido
     private const TIPOS = ['leagueMatch', 'playoffMatch', 'friendlyMatch'];
 
     /**
+     * Devuelve partidos desde MySQL con la estructura que consume el front.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public static function latestForPublic(
+        string $tipo,
+        int $limit,
+        string $principalClubId
+    ): array {
+        if (!in_array($tipo, self::TIPOS, true)) {
+            return [];
+        }
+
+        $limit = max(1, min($limit, 20));
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT
+                p.match_id, p.timestamp_ea, p.jugado_en, p.tipo,
+                p.club_id, p.rival_club_id, p.rival_nombre,
+                p.goles_favor, p.goles_contra, p.resultado,
+                principal.nombre AS principal_nombre,
+                principal.crest_asset_id AS principal_crest_asset_id,
+                rival.nombre AS rival_nombre_catalogo,
+                rival.crest_asset_id AS rival_crest_asset_id
+             FROM tab_partidos p
+             LEFT JOIN tab_clubes principal ON principal.ea_club_id = p.club_id
+             LEFT JOIN tab_clubes rival ON rival.ea_club_id = p.rival_club_id
+             WHERE p.tipo = :tipo AND p.club_id = :club_id
+             ORDER BY p.timestamp_ea DESC
+             LIMIT :limite'
+        );
+        $stmt->bindValue(':tipo', $tipo);
+        $stmt->bindValue(':club_id', $principalClubId);
+        $stmt->bindValue(':limite', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $matches = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $ownClubId = (string) $row['club_id'];
+            $rivalClubId = (string) $row['rival_club_id'];
+            $matches[] = [
+                'matchId' => (string) $row['match_id'],
+                'timestamp' => (int) $row['timestamp_ea'],
+                'playedAt' => $row['jugado_en'],
+                'type' => $row['tipo'],
+                'result' => $row['resultado'],
+                'clubs' => [
+                    $ownClubId => self::publicClub(
+                        (string) ($row['principal_nombre'] ?: 'Chuntaro FC'),
+                        (int) $row['goles_favor'],
+                        $row['principal_crest_asset_id']
+                    ),
+                    $rivalClubId => self::publicClub(
+                        (string) ($row['rival_nombre_catalogo'] ?: $row['rival_nombre']),
+                        (int) $row['goles_contra'],
+                        $row['rival_crest_asset_id']
+                    ),
+                ],
+            ];
+        }
+
+        return $matches;
+    }
+
+    /**
      * Inserta o actualiza una lista de partidos de EA.
      *
      * @return array{insertados:int,actualizados:int,sin_cambios:int,omitidos:int}
@@ -216,6 +281,24 @@ SQL;
     private static function scoreValue(array $club): int
     {
         return (int) ($club['goals'] ?? $club['score'] ?? 0);
+    }
+
+    /** @return array<string,mixed> */
+    private static function publicClub(string $name, int $goals, mixed $crestAssetId): array
+    {
+        $crestAssetId = trim((string) ($crestAssetId ?? ''));
+
+        return [
+            'goals' => $goals,
+            'score' => $goals,
+            'TEAM' => $crestAssetId,
+            'details' => [
+                'name' => $name,
+                'customKit' => [
+                    'crestAssetId' => $crestAssetId,
+                ],
+            ],
+        ];
     }
 
 }

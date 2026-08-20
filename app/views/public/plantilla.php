@@ -28,8 +28,7 @@ require __DIR__ . '/../layouts/public_header.php';
 
 <script>
 (function () {
-  // Solo same-origin: evita CORS. El servidor PHP consulta EA.
-  const PROXY_URL = <?= json_encode(App::url('/fc-clubs/api/ea/members')) ?>;
+  const DATA_URL = <?= json_encode(App::url('/fc-clubs/api/ea/members')) ?>;
 
   const statusEl = document.getElementById('plantillaStatus');
   const gridEl = document.getElementById('playersGrid');
@@ -125,7 +124,7 @@ require __DIR__ . '/../layouts/public_header.php';
     }).join('');
 
     if (members.length === 0) {
-      setStatus('info', 'La API respondió sin miembros.');
+      setStatus('info', 'No hay jugadores activos guardados.');
       return;
     }
 
@@ -136,7 +135,7 @@ require __DIR__ . '/../layouts/public_header.php';
 
   (async () => {
     try {
-      const res = await fetch(PROXY_URL, {
+      const res = await fetch(DATA_URL, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         credentials: 'same-origin',
@@ -147,7 +146,7 @@ require __DIR__ . '/../layouts/public_header.php';
       try {
         json = JSON.parse(text);
       } catch (e) {
-        throw new Error(`El proxy no devolvió JSON (HTTP ${res.status}). ¿BASE_PATH / document root correctos? URL: ${PROXY_URL}`);
+        throw new Error(`El endpoint no devolvió JSON (HTTP ${res.status}). URL: ${DATA_URL}`);
       }
 
       if (!res.ok || !json.exito) {
@@ -161,7 +160,7 @@ require __DIR__ . '/../layouts/public_header.php';
         'danger',
         `<strong>No se pudo cargar la plantilla.</strong><br>${escapeHtml(err.message || err)}
          <hr>
-         <small>Prueba abrir en el navegador: <code>${escapeHtml(PROXY_URL)}</code></small>`
+         <small>Prueba abrir en el navegador: <code>${escapeHtml(DATA_URL)}</code></small>`
       );
     }
   })();

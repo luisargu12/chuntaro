@@ -8,6 +8,78 @@ use RuntimeException;
 class Jugador
 {
     /**
+     * Devuelve la plantilla normalizada directamente desde MySQL.
+     *
+     * @return array{members:list<array<string,mixed>>,positionCount:array<string,int>}
+     */
+    public static function publicRoster(string $eaClubId): array
+    {
+        $pdo = Database::conectar();
+        $stmt = $pdo->prepare(
+            'SELECT
+                j.gamertag, j.pro_name, j.favorite_position, j.pro_position,
+                j.nacionalidad_id, j.altura_cm, j.overall, j.foto_url,
+                j.foto_path, e.partidos_jugados, e.win_rate, e.goles,
+                e.asistencias, e.rating_promedio, e.man_of_the_match,
+                e.tarjetas_rojas, e.porterias_defensa, e.porterias_portero,
+                e.pases_completados, e.porcentaje_pases,
+                e.tackles_completados, e.porcentaje_tackles,
+                e.porcentaje_tiros
+             FROM tab_jugadores j
+             INNER JOIN tab_clubes c ON c.id_club = j.id_club
+             LEFT JOIN tab_jugador_estadisticas e ON e.id_jugador = j.id_jugador
+             WHERE c.ea_club_id = :ea_club_id AND j.activo = 1
+             ORDER BY e.rating_promedio DESC, e.goles DESC, j.gamertag ASC'
+        );
+        $stmt->execute([':ea_club_id' => $eaClubId]);
+
+        $members = [];
+        $positionCount = [
+            'forward' => 0,
+            'midfielder' => 0,
+            'defender' => 0,
+            'goalkeeper' => 0,
+        ];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $position = (string) ($row['favorite_position'] ?? '');
+            if (array_key_exists($position, $positionCount)) {
+                $positionCount[$position]++;
+            }
+
+            $members[] = [
+                'name' => $row['gamertag'],
+                'proName' => $row['pro_name'],
+                'favoritePosition' => $position,
+                'proPos' => $row['pro_position'],
+                'proNationality' => self::nullableInt($row['nacionalidad_id']),
+                'proHeight' => self::nullableInt($row['altura_cm']),
+                'proOverall' => self::nullableInt($row['overall']),
+                'gamesPlayed' => (int) ($row['partidos_jugados'] ?? 0),
+                'winRate' => (float) ($row['win_rate'] ?? 0),
+                'goals' => (int) ($row['goles'] ?? 0),
+                'assists' => (int) ($row['asistencias'] ?? 0),
+                'ratingAve' => $row['rating_promedio'] === null
+                    ? null
+                    : (float) $row['rating_promedio'],
+                'manOfTheMatch' => (int) ($row['man_of_the_match'] ?? 0),
+                'redCards' => (int) ($row['tarjetas_rojas'] ?? 0),
+                'cleanSheetsDef' => (int) ($row['porterias_defensa'] ?? 0),
+                'cleanSheetsGK' => (int) ($row['porterias_portero'] ?? 0),
+                'passesMade' => (int) ($row['pases_completados'] ?? 0),
+                'passSuccessRate' => (float) ($row['porcentaje_pases'] ?? 0),
+                'tacklesMade' => (int) ($row['tackles_completados'] ?? 0),
+                'tackleSuccessRate' => (float) ($row['porcentaje_tackles'] ?? 0),
+                'shotSuccessRate' => (float) ($row['porcentaje_tiros'] ?? 0),
+                'photoUrl' => $row['foto_url'],
+                'photoPath' => $row['foto_path'],
+            ];
+        }
+
+        return ['members' => $members, 'positionCount' => $positionCount];
+    }
+
+    /**
      * Guarda la plantilla y sus estadísticas acumuladas.
      *
      * @return array{insertados:int,actualizados:int,estadisticas:int,omitidos:int}

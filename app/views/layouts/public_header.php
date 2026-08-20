@@ -17,7 +17,7 @@ $navLinkClass = static fn (bool $active): string =>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($docTitle) ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?= htmlspecialchars(App::asset('css/style.css')) ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(App::asset('css/style.css?v=' . time())) ?>">
     <link rel="icon" href="<?= htmlspecialchars(App::asset('img/favicon.png')) ?>" type="image/x-icon">
 </head>
 <body>

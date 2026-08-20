@@ -13,6 +13,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Config\App;
+use App\Services\EaClubsApi;
 
 App::load();
 
@@ -90,6 +91,30 @@ $payload = [
     'syncedAt' => gmdate(DATE_ATOM),
     'resources' => $resources,
 ];
+
+fwrite(STDOUT, "Guardando datos en la base local... ");
+try {
+    $localImport = (new EaClubsApi())->importSyncedData($resources, $matchLimit);
+    $localWarnings = array_values(array_filter([
+        $localImport['clubesWarning'] ?? null,
+        $localImport['jugadoresWarning'] ?? null,
+        $localImport['partidosWarning'] ?? null,
+        $localImport['partidoJugadoresWarning'] ?? null,
+        $localImport['partidoEstadisticasWarning'] ?? null,
+    ]));
+
+    if ($localWarnings === []) {
+        fwrite(STDOUT, "OK\n");
+    } else {
+        fwrite(STDOUT, "AVISO\n");
+        foreach ($localWarnings as $warning) {
+            fwrite(STDOUT, "- {$warning}\n");
+        }
+    }
+} catch (\Throwable $e) {
+    // La falla local no debe impedir que producción reciba los datos.
+    fwrite(STDOUT, "ERROR ({$e->getMessage()})\n");
+}
 
 fwrite(STDOUT, "Enviando datos a {$syncUrl}... ");
 $upload = postJson($syncUrl, $payload, $syncToken);

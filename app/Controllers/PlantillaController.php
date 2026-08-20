@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Config\App;
+use App\Models\Jugador;
 use App\Services\EaClubsApi;
 
 class PlantillaController
@@ -20,26 +21,15 @@ class PlantillaController
         require dirname(__DIR__) . '/views/public/plantilla.php';
     }
 
-    /** Proxy same-origin (útil en Hostinger si el browser tiene CORS) */
+    /** Datos públicos de la plantilla almacenados en MySQL. */
     public function membersApi(): array
     {
-        $api = new EaClubsApi();
-        $result = $api->memberStats();
-
-        if (!($result['ok'] ?? false)) {
-            http_response_code(502);
-            return [
-                'exito' => false,
-                'mensaje' => $result['error'] ?? 'Error al consultar EA',
-            ];
-        }
-
         return [
             'exito' => true,
-            'cached' => !empty($result['cached']),
-            'stale' => !empty($result['stale']),
-            'warning' => $result['warning'] ?? null,
-            'data' => $result['data'],
+            'source' => 'database',
+            'data' => Jugador::publicRoster(
+                (string) App::env('EA_CLUB_ID', '2043111')
+            ),
         ];
     }
 }
