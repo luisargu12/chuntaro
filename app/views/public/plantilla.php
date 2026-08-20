@@ -29,7 +29,7 @@ require __DIR__ . '/../layouts/public_header.php';
 <script>
 (function () {
   // Solo same-origin: evita CORS. El servidor PHP consulta EA.
-  const PROXY_URL = <?= json_encode(App::url('/api/ea/members')) ?>;
+  const PROXY_URL = <?= json_encode(App::url('/fc-clubs/api/ea/members')) ?>;
 
   const statusEl = document.getElementById('plantillaStatus');
   const gridEl = document.getElementById('playersGrid');

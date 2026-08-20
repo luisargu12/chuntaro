@@ -7,6 +7,8 @@ $ruta = $_GET['ruta'] ?? 'home';
 $navSolid = $navSolid ?? false;
 $pageTitle = $pageTitle ?? null;
 $docTitle = $pageTitle ? ($pageTitle . ' · ' . $appName . ' FC') : ($appName . ' FC');
+$navLinkClass = static fn (bool $active): string =>
+    'nav-link text-white fw-semibold' . ($active ? ' active' : '');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -30,16 +32,20 @@ $docTitle = $pageTitle ? ($pageTitle . ' · ' . $appName . ' FC') : ($appName . 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-center gap-3">
                 <li class="nav-item">
-                    <a class="nav-link text-white fw-semibold" href="<?= htmlspecialchars(App::url('/')) ?>">Inicio</a>
+                    <a class="<?= $navLinkClass($ruta === 'home' || $ruta === '') ?>"
+                       href="<?= htmlspecialchars(App::url('/')) ?>">Inicio</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white fw-semibold" href="<?= htmlspecialchars(App::url('/')) ?>">Martes Botanero</a>
+                    <a class="<?= $navLinkClass(str_starts_with($ruta, 'martes-botanero')) ?>"
+                       href="<?= htmlspecialchars(App::url('/martes-botanero')) ?>">Martes Botanero</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white fw-semibold" href="<?= htmlspecialchars(App::url('/plantilla')) ?>">Plantilla</a>
+                    <a class="<?= $navLinkClass(str_starts_with($ruta, 'fc-clubs')) ?>"
+                       href="<?= htmlspecialchars(App::url('/fc-clubs')) ?>">FC Clubs</a>
                 </li>
                 <li class="nav-item">
-                    <a class="text-decoration-none btn-reta text-center d-inline-block" href="<?= htmlspecialchars(App::url('/')) ?>">Torneo</a>
+                    <a class="text-decoration-none btn-reta text-center d-inline-block"
+                       href="<?= htmlspecialchars(App::url('/torneo')) ?>">Torneo</a>
                 </li>
             </ul>
         </div>

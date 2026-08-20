@@ -48,7 +48,7 @@ class Router
 
         $metodo = $_SERVER['REQUEST_METHOD'];
 
-        if (str_starts_with($ruta, 'api/')) {
+        if ($this->isApiRoute($ruta)) {
             header('Content-Type: application/json; charset=utf-8');
         }
 
@@ -65,7 +65,7 @@ class Router
             $result = $this->callHandler($handler);
         } catch (\Throwable $e) {
             error_log('Ruta ' . $ruta . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
-            if (!str_starts_with($ruta, 'api/')) {
+            if (!$this->isApiRoute($ruta)) {
                 throw $e;
             }
             http_response_code(500);
@@ -97,7 +97,7 @@ class Router
     {
         http_response_code(404);
 
-        if (str_starts_with($ruta, 'api/')) {
+        if ($this->isApiRoute($ruta)) {
             echo json_encode(['error' => 'Endpoint no encontrado: ' . $ruta]);
             return;
         }
@@ -109,5 +109,11 @@ class Router
         }
 
         echo "404 — Ruta no encontrada: " . htmlspecialchars($ruta);
+    }
+
+    private function isApiRoute(string $ruta): bool
+    {
+        return str_starts_with($ruta, 'api/')
+            || str_contains($ruta, '/api/');
     }
 }

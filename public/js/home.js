@@ -113,21 +113,27 @@
 
         let resultClass = "text-bg-secondary";
         let resultLabel = "Empate";
+        let resultTone = "draw";
         if (ownScore > rivalScore) {
           resultClass = "text-bg-success";
           resultLabel = "Victoria";
+          resultTone = "win";
         } else if (ownScore < rivalScore) {
           resultClass = "text-bg-danger";
           resultLabel = "Derrota";
+          resultTone = "loss";
         }
 
         return `
-          <div class="col-md-4">
-            <article class="card border-0 shadow-sm h-100 card-hover">
-              <div class="card-body p-4 text-center">
-                <p class="text-uppercase text-muted small fw-semibold mb-3">
+          <div class="col-lg-4">
+            <article class="fc-match-card fc-match-card--${resultTone}">
+              <div class="fc-match-meta">
+                <p class="mb-0">
                   ${escapeHtml(matchDate(match?.timestamp))}
                 </p>
+                <span class="badge ${resultClass}">${resultLabel}</span>
+              </div>
+              <div class="fc-match-body">
                 <div class="d-flex justify-content-between align-items-center gap-3">
                   <div class="match-team flex-fill">
                     <img
@@ -139,9 +145,9 @@
                     <h5 class="fw-bold mb-0">Chuntaro FC</h5>
                   </div>
                   <div class="flex-shrink-0">
-                    <span class="fs-2 fw-bold">
+                    <span class="fc-match-score">
                       ${ownScore}
-                      <span class="text-muted mx-1">–</span>
+                      <span>:</span>
                       ${rivalScore}
                     </span>
                   </div>
@@ -155,7 +161,6 @@
                     <h5 class="fw-bold mb-0">${escapeHtml(rivalName)}</h5>
                   </div>
                 </div>
-                <span class="badge ${resultClass} mt-4">${resultLabel}</span>
               </div>
             </article>
           </div>`;
@@ -223,29 +228,4 @@
     "-=0.6"
   );
 
-  const counters = {
-    lesiones: document.getElementById("stat-lesiones"),
-    inactivos: document.getElementById("stat-inactivos"),
-    expulsiones: document.getElementById("stat-expulsiones"),
-    derrotas: document.getElementById("stat-derrotas"),
-  };
-
-  const state = { lesiones: 0, inactivos: 0, expulsiones: 0, derrotas: 0 };
-  const targets = { lesiones: 12, inactivos: 7, expulsiones: 4, derrotas: 15 };
-
-  gsap.to(state, {
-    ...targets,
-    duration: 2,
-    ease: "power1.out",
-    scrollTrigger: {
-      trigger: ".estadisticas",
-      start: "top 80%",
-      toggleActions: "play none none none",
-    },
-    onUpdate: () => {
-      Object.keys(counters).forEach((key) => {
-        if (counters[key]) counters[key].textContent = Math.round(state[key]);
-      });
-    },
-  });
 })();

@@ -226,3 +226,334 @@ body {
     height: 56px;
   }
 }
+
+/* FC Clubs */
+.fc-clubs-page {
+  background: #f4f0e9;
+  overflow: hidden;
+}
+
+.fc-intro,
+.fc-explore-section {
+  padding: clamp(4.5rem, 9vw, 8rem) 0;
+}
+
+.fc-intro {
+  position: relative;
+  background:
+    radial-gradient(circle at 88% 15%, rgba(229, 178, 93, 0.18), transparent 24rem),
+    #f4f0e9;
+}
+
+.fc-eyebrow {
+  color: var(--color-primary);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.fc-display {
+  max-width: 780px;
+  color: #251b19;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(2.25rem, 5vw, 4.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.fc-display-light {
+  color: #fff;
+}
+
+.fc-lead {
+  max-width: 680px;
+  color: #6e625f;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.75;
+}
+
+.fc-btn-primary,
+.fc-btn-ghost {
+  border-radius: 0;
+  padding: 0.9rem 1.4rem;
+  font-weight: 800;
+}
+
+.fc-btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.fc-btn-primary:hover {
+  background: var(--color-primary-light);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.fc-btn-ghost {
+  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.fc-btn-ghost:hover {
+  color: var(--color-primary-light);
+  border-color: var(--color-accent);
+}
+
+.fc-identity-card {
+  position: relative;
+  min-height: 350px;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  overflow: hidden;
+  padding: 2rem;
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 24px 24px 0 rgba(81, 36, 31, 0.1);
+}
+
+.fc-identity-card::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 520px;
+  top: -120px;
+  right: -65px;
+  background: var(--color-accent);
+  opacity: 0.14;
+  transform: rotate(24deg);
+}
+
+.fc-identity-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.fc-identity-card h3 {
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.fc-identity-card p {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.fc-identity-crest {
+  width: clamp(105px, 12vw, 155px);
+  height: clamp(105px, 12vw, 155px);
+  object-fit: contain;
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.35));
+}
+
+.fc-live-badge {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fc-live-badge i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #69d68b;
+  box-shadow: 0 0 0 5px rgba(105, 214, 139, 0.15);
+}
+
+.fc-card-kicker {
+  color: var(--color-accent) !important;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.fc-matches-section {
+  padding: clamp(4.5rem, 9vw, 8rem) 0;
+  background: #1d1715;
+}
+
+.fc-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.fc-matches-section .fc-eyebrow {
+  color: var(--color-accent);
+}
+
+.fc-section-number {
+  color: rgba(255, 255, 255, 0.08);
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(4rem, 10vw, 8rem);
+  line-height: 0.7;
+}
+
+.fc-section-heading-dark .fc-section-number {
+  color: rgba(81, 36, 31, 0.09);
+}
+
+.fc-loading {
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+}
+
+.fc-match-card {
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  border-top: 5px solid #807874;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.fc-match-card:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 22px 42px rgba(0, 0, 0, 0.28);
+}
+
+.fc-match-card--win {
+  border-color: #3d9b60;
+}
+
+.fc-match-card--loss {
+  border-color: #b84343;
+}
+
+.fc-match-card--draw {
+  border-color: var(--color-accent);
+}
+
+.fc-match-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #ebe5de;
+  color: #8b7f7b;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fc-match-body {
+  padding: 2rem 1.25rem 2.25rem;
+  text-align: center;
+}
+
+.fc-match-score {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #251b19;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  white-space: nowrap;
+}
+
+.fc-match-score span {
+  color: #b6aaa5;
+  font-size: 0.75em;
+}
+
+.fc-explore-section {
+  background: #f4f0e9;
+}
+
+.fc-feature-card {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  color: #fff;
+  text-decoration: none;
+}
+
+.fc-feature-card-primary {
+  background: var(--color-primary);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.fc-feature-card-primary:hover {
+  background: var(--color-primary-light);
+  color: #fff;
+  transform: translateY(-5px);
+}
+
+.fc-feature-card-muted {
+  background: #ded7ce;
+  color: #4e4441;
+}
+
+.fc-feature-card h3 {
+  max-width: 500px;
+  font-family: "Black Ops One", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+}
+
+.fc-feature-card p {
+  max-width: 540px;
+  margin-bottom: 0;
+  color: inherit;
+  opacity: 0.7;
+  font-size: 1.05rem;
+}
+
+.fc-feature-index {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.75rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.fc-feature-arrow {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.6rem;
+  color: var(--color-accent);
+  font-size: 2.5rem;
+  transition: transform 0.25s ease;
+}
+
+.fc-feature-card-primary:hover .fc-feature-arrow {
+  transform: translate(5px, -5px);
+}
+
+@media (max-width: 767.98px) {
+  .fc-section-heading {
+    align-items: flex-start;
+  }
+
+  .fc-section-number {
+    font-size: 4rem;
+  }
+
+  .fc-identity-card {
+    min-height: 300px;
+    box-shadow: 12px 12px 0 rgba(81, 36, 31, 0.1);
+  }
+
+  .fc-feature-card {
+    min-height: 300px;
+  }
+}

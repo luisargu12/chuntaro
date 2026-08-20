@@ -17,92 +17,106 @@ require __DIR__ . '/../layouts/public_header.php';
     </div>
 </header>
 
-<section class="estadisticas py-5 text-white">
-    <div class="container text-center">
-        <h3 class="fw-bold mb-4 py-3 titulo-stats">
-            La élite del fútbol para personas retiradas o con autismo
-        </h3>
-        <p class="text-white-50 fs-5 mb-5">Líderes en:</p>
-        <div class="row g-4 justify-content-center">
-            <div class="col-6 col-md-3">
-                <div class="stat-card p-4">
-                    <h2 id="stat-lesiones" class="display-3 fw-bold text-accent">0</h2>
-                    <p class="mb-0 text-white-50">Lesiones acumuladas</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card p-4">
-                    <h2 id="stat-inactivos" class="display-3 fw-bold text-accent">0</h2>
-                    <p class="mb-0 text-white-50">Jugadores inactivos</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card p-4">
-                    <h2 id="stat-expulsiones" class="display-3 fw-bold text-accent">0</h2>
-                    <p class="mb-0 text-white-50">Expulsiones</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card p-4">
-                    <h2 id="stat-derrotas" class="display-3 fw-bold text-accent">0</h2>
-                    <p class="mb-0 text-white-50">Derrotas</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<main class="container py-5 my-5">
-    <div class="row text-center mb-5">
-        <div class="col-12">
-            <h2 class="fw-bold mb-3">Sigue la Liga Oficial</h2>
-            <p class="text-muted">Últimos resultados oficiales de Chuntaro FC.</p>
-        </div>
-    </div>
-
-    <div
-        id="recentMatches"
-        class="row g-4 mt-4"
-        data-endpoint="<?= htmlspecialchars(App::url('/api/ea/matches?type=leagueMatch&limit=3')) ?>"
-        data-club-id="<?= htmlspecialchars((string) App::env('EA_CLUB_ID', '2043111')) ?>"
-        data-own-crest="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
-        data-crest-base="<?= htmlspecialchars((string) App::env(
-            'EA_CREST_CDN_BASE',
-            'https://eafc26.content.easports.com/fc/fltOnlineAssets/26E4D4D6-8DBB-4A9A-BD99-9C47D3AA341D/2026/fcweb/crests/256x256'
-        )) ?>"
-        data-crest-fallback="https://media.contentapi.ea.com/content/dam/eacom/fc/pro-clubs/notfound-crest.png"
-    >
-        <div class="col-12">
-            <div class="alert alert-secondary text-center mb-0">
-                Cargando últimos partidos desde EA Clubs…
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mt-5">
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm border-0 card-hover">
-                <div class="card-body text-center p-5">
-                    <h3 class="card-title mb-3">Torneo Express</h3>
-                    <p class="card-text text-muted mb-4">
-                        Escribe nombres, revuelve jugadores y genera llaves al instante.
+<main class="fc-clubs-page">
+    <section class="fc-intro">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7">
+                    <p class="fc-eyebrow mb-3">EA Sports FC 26 · Pro Clubs</p>
+                    <h2 class="fc-display mb-4">El vestidor también existe en línea.</h2>
+                    <p class="fc-lead mb-4">
+                        Sigue cada resultado, conoce a la plantilla y revisa el rendimiento
+                        de Chuntaro FC en su camino por la liga virtual.
                     </p>
-                    <a href="<?= htmlspecialchars(App::url('/')) ?>" class="btn btn-primary w-100 btn-lg disabled">Próximamente</a>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="<?= htmlspecialchars(App::url('/fc-clubs/plantilla')) ?>"
+                           class="btn fc-btn-primary">Conoce la plantilla</a>
+                        <a href="#ultimos-partidos" class="btn fc-btn-ghost">Últimos resultados</a>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <article class="fc-identity-card">
+                        <span class="fc-live-badge"><i></i> Datos sincronizados</span>
+                        <img src="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
+                             alt="Escudo de Chuntaro FC"
+                             class="fc-identity-crest">
+                        <div>
+                            <p class="fc-card-kicker mb-1">Club virtual</p>
+                            <h3 class="mb-1">Chuntaro FC</h3>
+                            <p class="mb-0">Club ID <?= htmlspecialchars((string) App::env('EA_CLUB_ID', '2043111')) ?></p>
+                        </div>
+                    </article>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm border-0 bg-light card-hover">
-                <div class="card-body text-center p-5">
-                    <h3 class="card-title mb-3">Liga Semiprofesional</h3>
-                    <p class="card-text text-muted mb-4">
-                        Tabla general, estadísticas y próximos partidos oficiales.
-                    </p>
-                    <a href="<?= htmlspecialchars(App::url('/')) ?>" class="btn btn-dark w-100 btn-lg disabled">Próximamente</a>
+    </section>
+
+    <section id="ultimos-partidos" class="fc-matches-section">
+        <div class="container">
+            <div class="fc-section-heading">
+                <div>
+                    <p class="fc-eyebrow mb-2">Jornada reciente</p>
+                    <h2 class="fc-display fc-display-light mb-0">Últimos partidos</h2>
+                </div>
+                <span class="fc-section-number" aria-hidden="true">01</span>
+            </div>
+
+            <div
+                id="recentMatches"
+                class="row g-4"
+                data-endpoint="<?= htmlspecialchars(App::url('/fc-clubs/api/ea/matches?type=leagueMatch&limit=3')) ?>"
+                data-club-id="<?= htmlspecialchars((string) App::env('EA_CLUB_ID', '2043111')) ?>"
+                data-own-crest="<?= htmlspecialchars(App::asset('img/escudo.png')) ?>"
+                data-crest-base="<?= htmlspecialchars((string) App::env(
+                    'EA_CREST_CDN_BASE',
+                    'https://eafc26.content.easports.com/fc/fltOnlineAssets/26E4D4D6-8DBB-4A9A-BD99-9C47D3AA341D/2026/fcweb/crests/256x256'
+                )) ?>"
+                data-crest-fallback="https://media.contentapi.ea.com/content/dam/eacom/fc/pro-clubs/notfound-crest.png"
+            >
+                <div class="col-12">
+                    <div class="fc-loading">Cargando resultados desde EA Clubs…</div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="fc-explore-section">
+        <div class="container">
+            <div class="fc-section-heading fc-section-heading-dark">
+                <div>
+                    <p class="fc-eyebrow mb-2">Explora el club</p>
+                    <h2 class="fc-display mb-0">Más que un marcador</h2>
+                </div>
+                <span class="fc-section-number" aria-hidden="true">02</span>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <a href="<?= htmlspecialchars(App::url('/fc-clubs/plantilla')) ?>"
+                       class="fc-feature-card fc-feature-card-primary">
+                        <span class="fc-feature-index">01</span>
+                        <div>
+                            <p class="fc-card-kicker mb-2">Jugadores</p>
+                            <h3>La plantilla completa</h3>
+                            <p>Posiciones, goles, asistencias, rating y rendimiento acumulado.</p>
+                        </div>
+                        <span class="fc-feature-arrow" aria-hidden="true">↗</span>
+                    </a>
+                </div>
+                <div class="col-lg-5">
+                    <div class="fc-feature-card fc-feature-card-muted">
+                        <span class="fc-feature-index">02</span>
+                        <div>
+                            <p class="fc-card-kicker mb-2">Próximamente</p>
+                            <h3>Centro de estadísticas</h3>
+                            <p>Historial, comparativas, rankings y detalle de cada partido.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
 
 <?php require __DIR__ . '/../layouts/public_footer.php'; ?>
